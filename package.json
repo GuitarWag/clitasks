@@ -1,0 +1,42 @@
+{
+  "name": "clitasks",
+  "version": "2.1.0",
+  "description": "CLI task management with Markdown storage - usable by humans and AI agents",
+  "main": "dist/cli.js",
+  "bin": {
+    "tasks": "./dist/cli.js",
+    "tasks-tui": "./dist/tui.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts",
+    "dev:tui": "tsx src/tui.ts",
+    "start": "node dist/cli.js",
+    "tui": "node dist/tui.js",
+    "test": "tsx --test src/**/*.test.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "cli",
+    "task",
+    "kanban",
+    "scrum",
+    "markdown",
+    "ai",
+    "agent"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/blessed": "^0.1.27",
+    "@types/node": "^25.1.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "blessed": "^0.1.81",
+    "blessed-contrib": "^4.11.0",
+    "chalk": "^5.6.2",
+    "commander": "^14.0.3"
+  }
+}
