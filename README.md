@@ -2,25 +2,43 @@
 
 A command-line task management system that uses Markdown files as storage. Perfect for both human developers and AI agents working on projects.
 
+## Install
+
+Install globally from GitHub:
+
+```bash
+npm install -g github:GuitarWag/clitasks
+```
+
+This makes the `tasks` command available everywhere on your system.
+
+To verify it works:
+
+```bash
+tasks --version
+```
+
+### From source
+
+```bash
+git clone https://github.com/GuitarWag/clitasks.git
+cd clitasks
+npm install
+npm run build
+npm link
+```
+
 ## Features
 
 - **Markdown-based storage**: Tasks are stored in human-readable `.md` files
 - **Kanban board**: Organize tasks in TODO, IN PROGRESS, DONE, and BLOCKED columns
 - **Rich task metadata**: Priority, assignee, tags, due dates, descriptions
 - **CLI interface**: Fast and efficient command-line operations
-- **Interactive TUI**: Beautiful terminal UI with keyboard navigation (NEW!)
-- **Real-time filtering**: Search tasks across all columns instantly (NEW!)
-- **Quick actions**: Keyboard shortcuts for common operations (NEW!)
+- **Interactive TUI**: Beautiful terminal UI with keyboard navigation
+- **Real-time filtering**: Search tasks across all columns instantly
+- **Quick actions**: Keyboard shortcuts for common operations
 - **AI-friendly**: Both humans and AI agents can read and edit the same task board
 - **Portable**: No database required, just a simple Markdown file
-
-## Installation
-
-```bash
-npm install
-npm run build
-npm link  # Optional: to use 'tasks' command globally
-```
 
 ## Usage
 
