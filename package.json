@@ -14,7 +14,7 @@
     "start": "node dist/cli.js",
     "tui": "node dist/tui.js",
     "test": "tsx --test src/**/*.test.ts",
-    "prepare": "npx tsc"
+    "prepare": "npx -p typescript tsc"
   },
   "keywords": [
     "cli",
