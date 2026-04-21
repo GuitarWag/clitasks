@@ -506,4 +506,58 @@ program
     }
   });
 
+// Codex skill installer command
+program
+  .command('codex')
+  .description('Install SKILL.md to Codex CLI skills directory')
+  .option('-g, --global', 'Install to ~/.codex/skills/tasks-cli instead of local .codex/skills')
+  .action((options) => {
+    // Find SKILL.md location
+    const possiblePaths = [
+      path.join(__dirname, '..', 'SKILL.md'),
+      path.join(__dirname, 'SKILL.md'),
+    ];
+
+    let skillSourcePath: string | null = null;
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        skillSourcePath = p;
+        break;
+      }
+    }
+
+    if (!skillSourcePath) {
+      console.log(chalk.red('✗ SKILL.md not found. Make sure tasks-cli is properly installed.'));
+      process.exit(1);
+    }
+
+    // Determine target directory
+    const targetDir = options.global
+      ? path.join(os.homedir(), '.codex', 'skills', 'tasks-cli')
+      : path.join(process.cwd(), '.codex', 'skills');
+
+    const targetPath = path.join(targetDir, 'SKILL.md');
+
+    try {
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+      }
+
+      fs.copyFileSync(skillSourcePath, targetPath);
+
+      if (options.global) {
+        console.log(chalk.green(`✓ SKILL.md installed to global Codex skills:`));
+        console.log(chalk.cyan(`  ${targetPath}`));
+        console.log(chalk.dim('\nSkill available globally for Codex CLI.'));
+      } else {
+        console.log(chalk.green(`✓ SKILL.md installed to local Codex skills:`));
+        console.log(chalk.cyan(`  ${targetPath}`));
+        console.log(chalk.dim('\nSkill available for this project only.'));
+      }
+    } catch (error) {
+      console.log(chalk.red(`✗ Failed to install SKILL.md: ${error}`));
+      process.exit(1);
+    }
+  });
+
 program.parse();
