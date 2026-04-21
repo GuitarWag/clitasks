@@ -4,10 +4,14 @@ A command-line task management system that uses Markdown files as storage. Perfe
 
 ## Install
 
-Install globally from GitHub:
+Install globally from source:
 
 ```bash
-npm install -g github:GuitarWag/clitasks
+git clone https://github.com/GuitarWag/clitasks.git
+cd clitasks
+npm install
+npm run build
+npm link
 ```
 
 This makes the `tasks` command available everywhere on your system.
@@ -28,16 +32,6 @@ tasks claude -g
 
 # Or install locally for current project only
 tasks claude
-```
-
-### From source
-
-```bash
-git clone https://github.com/GuitarWag/clitasks.git
-cd clitasks
-npm install
-npm run build
-npm link
 ```
 
 ## Features
