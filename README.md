@@ -34,6 +34,18 @@ tasks claude -g
 tasks claude
 ```
 
+### Codex CLI Skill
+
+To add the skill to Codex CLI (OpenAI's coding agent):
+
+```bash
+# Install globally for all projects
+tasks codex -g
+
+# Or install locally for current project only
+tasks codex
+```
+
 ## Features
 
 - **Markdown-based storage**: Tasks are stored in human-readable `.md` files
