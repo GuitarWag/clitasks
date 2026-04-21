@@ -18,6 +18,18 @@ To verify it works:
 tasks --version
 ```
 
+### Claude Code Skill
+
+To add the skill to Claude Code (for enhanced AI task management):
+
+```bash
+# Install globally for all projects
+tasks claude -g
+
+# Or install locally for current project only
+tasks claude
+```
+
 ### From source
 
 ```bash

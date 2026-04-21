@@ -6,6 +6,8 @@ import { TaskBoard } from './board';
 import { TaskStatus, TaskPriority } from './types';
 import { Exporter } from './export';
 import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 
 const program = new Command();
 
@@ -442,6 +444,66 @@ program
     const filePath = getFilePath(program.opts());
     const tui = new TaskTUI(filePath);
     tui.run();
+  });
+
+// Claude skill installer command
+program
+  .command('claude')
+  .description('Install SKILL.md to Claude skills directory')
+  .option('-g, --global', 'Install to ~/.claude/skills/tasks-cli instead of local .claude/skills')
+  .action((options) => {
+    // Find SKILL.md location - check multiple possible locations
+    const possiblePaths = [
+      // When running from source (development)
+      path.join(__dirname, '..', 'SKILL.md'),
+      // When installed globally (SKILL.md should be alongside dist)
+      path.join(__dirname, '..', 'SKILL.md'),
+      // Alternative location
+      path.join(__dirname, 'SKILL.md'),
+    ];
+
+    let skillSourcePath: string | null = null;
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        skillSourcePath = p;
+        break;
+      }
+    }
+
+    if (!skillSourcePath) {
+      console.log(chalk.red('✗ SKILL.md not found. Make sure tasks-cli is properly installed.'));
+      process.exit(1);
+    }
+
+    // Determine target directory
+    const targetDir = options.global
+      ? path.join(os.homedir(), '.claude', 'skills', 'tasks-cli')
+      : path.join(process.cwd(), '.claude', 'skills');
+
+    const targetPath = path.join(targetDir, 'SKILL.md');
+
+    try {
+      // Create directory if it doesn't exist
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+      }
+
+      // Copy SKILL.md
+      fs.copyFileSync(skillSourcePath, targetPath);
+
+      if (options.global) {
+        console.log(chalk.green(`✓ SKILL.md installed to global Claude skills:`));
+        console.log(chalk.cyan(`  ${targetPath}`));
+        console.log(chalk.dim('\nThe skill is now available globally for all Claude Code sessions.'));
+      } else {
+        console.log(chalk.green(`✓ SKILL.md installed to local Claude skills:`));
+        console.log(chalk.cyan(`  ${targetPath}`));
+        console.log(chalk.dim('\nThe skill is available for this project only.'));
+      }
+    } catch (error) {
+      console.log(chalk.red(`✗ Failed to install SKILL.md: ${error}`));
+      process.exit(1);
+    }
   });
 
 program.parse();
