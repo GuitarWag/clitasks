@@ -14,7 +14,10 @@
     "start": "node dist/cli.js",
     "tui": "node dist/tui.js",
     "test": "tsx --test src/**/*.test.ts",
-    "prepare": "npx -p typescript tsc"
+    "prepare": "npx -p typescript tsc",
+    "lint": "biome check src/",
+    "format": "biome format src/ --write",
+    "check": "biome check --apply src/"
   },
   "keywords": [
     "cli",
@@ -32,6 +35,7 @@
     "SKILL.md"
   ],
   "devDependencies": {
+    "@biomejs/biome": "^2.4.12",
     "@types/blessed": "^0.1.27",
     "@types/node": "^25.1.0",
     "tsx": "^4.21.0"
