@@ -8,7 +8,7 @@
     "tasks-tui": "./dist/tui.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && chmod +x dist/cli.js dist/tui.js",
     "dev": "tsx src/cli.ts",
     "dev:tui": "tsx src/tui.ts",
     "start": "node dist/cli.js",
