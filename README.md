@@ -4,17 +4,19 @@ A command-line task management system that uses Markdown files as storage. Perfe
 
 ## Install
 
-Install globally from source:
+Build from source (requires Go 1.22+):
 
 ```bash
 git clone https://github.com/GuitarWag/clitasks.git
 cd clitasks
-npm install
-npm run build
-npm link
+make install        # puts `tasks` in $GOBIN (or $GOPATH/bin)
 ```
 
-This makes the `tasks` command available everywhere on your system.
+Or build a local binary:
+
+```bash
+make build          # produces bin/tasks
+```
 
 To verify it works:
 
@@ -191,6 +193,8 @@ tasks export --format json -o backup.json
 tasks export --format csv -o report.csv
 ```
 
+Note: `--format` is long-only because the root `-f` short flag is reserved for `--file`.
+
 ### Using Custom File
 
 By default, tasks are stored in `tasks.md`. You can specify a different file:
@@ -301,41 +305,21 @@ tasks export --format json -o tasks-backup.json
 ## Development
 
 ```bash
-# Run in development mode
-npm run dev -- board
-
-# Build
-npm run build
-
-# Run built version
-npm start -- board
+make build         # bin/tasks
+make test          # go test ./... -race
+make lint          # golangci-lint
+make run ARGS="board"   # go run ./cmd/tasks board
 ```
 
-## TypeScript API
+Layout:
 
-You can also use the task board programmatically:
-
-```typescript
-import { TaskBoard } from './board';
-
-const board = new TaskBoard('tasks.md');
-
-// Add a task
-const task = board.addTask('Implement feature', {
-  priority: 'high',
-  assignee: 'alice',
-  tags: ['backend'],
-});
-
-// Move task
-board.moveTask(task.id, 'in-progress');
-
-// List tasks
-const inProgressTasks = board.listTasks({ status: 'in-progress' });
-
-// View board
-console.log(board.getTasksByStatus());
-```
+- `cmd/tasks/` — binary entry
+- `internal/model/` — Task / Board types
+- `internal/storage/` — Markdown parser + atomic writer
+- `internal/board/` — Board service
+- `internal/export/` — JSON / CSV / summary
+- `internal/cli/` — Cobra commands (and embedded `SKILL.md`)
+- `internal/tui/` — Bubble Tea program
 
 ## License
 

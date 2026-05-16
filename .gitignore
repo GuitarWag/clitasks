@@ -3,3 +3,6 @@ dist/
 *.log
 .DS_Store
 .claude/
+bin/
+cover.out
+internal/cli/SKILL.md
