@@ -278,6 +278,48 @@ func TestSkillInstall_local(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestGlobalFileFlag_directPath(t *testing.T) {
+	t.Setenv("TASK_BOARD_FILE", "")
+	t.Cleanup(func() { flagFile = "" })
+	p := filepath.Join(t.TempDir(), "explicit.md")
+
+	out, err := runCmd(t, "-f", p, "init", "-n", "Explicit")
+	require.NoError(t, err)
+	assert.Contains(t, out, "Board initialized")
+
+	_, err = os.Stat(p)
+	require.NoError(t, err, "the explicit file should have been created")
+}
+
+func TestList_invalidStatusFlag(t *testing.T) {
+	_ = withBoardFile(t)
+	_, err := runCmd(t, "list", "-s", "bogus")
+	assert.Error(t, err, "invalid status flag should error")
+}
+
+func TestList_combinedFilters(t *testing.T) {
+	_ = withBoardFile(t)
+	_, _ = runCmd(t, "add", "alpha", "-p", "high", "-a", "alice", "-t", "x")
+	_, _ = runCmd(t, "add", "beta", "-p", "high", "-a", "bob", "-t", "x")
+	_, _ = runCmd(t, "add", "gamma", "-p", "low", "-a", "alice", "-t", "x")
+
+	out, err := runCmd(t, "list", "-p", "high", "-a", "alice")
+	require.NoError(t, err)
+	assert.Contains(t, out, "Found 1 task")
+	assert.Contains(t, out, "alpha")
+	assert.NotContains(t, out, "beta")
+	assert.NotContains(t, out, "gamma")
+}
+
+func TestList_detailed(t *testing.T) {
+	_ = withBoardFile(t)
+	_, _ = runCmd(t, "add", "x", "-d", "the description body")
+	out, err := runCmd(t, "list", "--detailed")
+	require.NoError(t, err)
+	assert.Contains(t, out, "the description body")
+	assert.Contains(t, out, "Created:")
+}
+
 func TestSkillInstall_global(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)

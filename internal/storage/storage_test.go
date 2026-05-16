@@ -223,6 +223,72 @@ func TestAtomicWrite_doesNotLeaveTempFiles(t *testing.T) {
 	}
 }
 
+func TestRead_legacyTwoLineTimestamps(t *testing.T) {
+	p := tmpFile(t)
+	md := strings.Join([]string{
+		"# Board: Legacy",
+		"> Created: 2026-01-01T00:00:00Z",
+		"> Updated: 2026-01-02T00:00:00Z",
+		"",
+		"## TODO",
+		"",
+	}, "\n")
+	require.NoError(t, os.WriteFile(p, []byte(md), 0o644))
+
+	b, err := NewMarkdown(p).Read()
+	require.NoError(t, err)
+	assert.Equal(t, "2026-01-01T00:00:00Z", b.CreatedAt.UTC().Format(time.RFC3339))
+	assert.Equal(t, "2026-01-02T00:00:00Z", b.UpdatedAt.UTC().Format(time.RFC3339))
+}
+
+func TestRead_titleWithSpecialChars(t *testing.T) {
+	p := tmpFile(t)
+	md := strings.Join([]string{
+		"# Board: T",
+		"",
+		"## TODO",
+		"",
+		"- [ ] [T-X1] **Title with: punctuation, commas & dashes - and (parens)** `priority:medium`",
+		"  > Description with `backticks` and \"quotes\"",
+		"",
+	}, "\n")
+	require.NoError(t, os.WriteFile(p, []byte(md), 0o644))
+
+	b, err := NewMarkdown(p).Read()
+	require.NoError(t, err)
+	require.Len(t, b.Tasks, 1)
+	assert.Equal(t, "Title with: punctuation, commas & dashes - and (parens)", b.Tasks[0].Title)
+	assert.Equal(t, `Description with `+"`"+`backticks`+"`"+` and "quotes"`, b.Tasks[0].Description)
+}
+
+func TestRead_outOfOrderSections(t *testing.T) {
+	p := tmpFile(t)
+	md := strings.Join([]string{
+		"# Board: OOO",
+		"",
+		"## DONE",
+		"",
+		"- [x] [T-D1] **done first** `priority:medium`",
+		"",
+		"## TODO",
+		"",
+		"- [ ] [T-T1] **todo second** `priority:medium`",
+		"",
+	}, "\n")
+	require.NoError(t, os.WriteFile(p, []byte(md), 0o644))
+
+	b, err := NewMarkdown(p).Read()
+	require.NoError(t, err)
+	require.Len(t, b.Tasks, 2)
+
+	statuses := map[string]model.TaskStatus{}
+	for _, tk := range b.Tasks {
+		statuses[tk.ID] = tk.Status
+	}
+	assert.Equal(t, model.StatusDone, statuses["T-D1"])
+	assert.Equal(t, model.StatusTodo, statuses["T-T1"])
+}
+
 func TestPath_returnsConfigured(t *testing.T) {
 	s := NewMarkdown("/foo/bar.md")
 	assert.Equal(t, "/foo/bar.md", s.Path())

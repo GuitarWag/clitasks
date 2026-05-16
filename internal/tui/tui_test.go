@@ -257,6 +257,48 @@ func TestView_helpFooterShown(t *testing.T) {
 	assert.Contains(t, v, "q quit")
 }
 
+func TestForm_tabNavigation(t *testing.T) {
+	b, p := setupBoard(t)
+	m := newModel(b, p)
+	m = send(m, k("a"))
+	assert.Equal(t, 0, m.form.step)
+
+	m = send(m, k("tab"))
+	assert.Equal(t, 1, m.form.step)
+
+	m = send(m, tea.KeyMsg{Type: tea.KeyShiftTab})
+	assert.Equal(t, 0, m.form.step)
+
+	// wrap backwards from step 0
+	m = send(m, tea.KeyMsg{Type: tea.KeyShiftTab})
+	assert.Equal(t, len(m.form.fields)-1, m.form.step)
+}
+
+func TestFilter_noMatches(t *testing.T) {
+	b, p := setupBoard(t)
+	_, _ = b.Add("apple", board.AddInput{})
+	m := newModel(b, p)
+	m = send(m, k("f"))
+	m.filterIn.SetValue("zzz")
+	m = send(m, k("enter"))
+
+	view := m.View()
+	assert.Contains(t, view, "TODO (0)")
+	assert.Contains(t, view, "(empty)", "no-match column should render empty placeholder")
+}
+
+func TestWindowResize_changesLayout(t *testing.T) {
+	b, p := setupBoard(t)
+	m := newModel(b, p)
+
+	mm, _ := m.Update(tea.WindowSizeMsg{Width: 200, Height: 50})
+	m = mm.(Model)
+	assert.Equal(t, 200, m.width)
+	assert.Equal(t, 50, m.height)
+	// View should not panic at the new size.
+	assert.NotEmpty(t, m.View())
+}
+
 func TestSubmitForm_invalidPriority(t *testing.T) {
 	b, p := setupBoard(t)
 	m := newModel(b, p)
