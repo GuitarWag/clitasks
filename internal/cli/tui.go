@@ -11,7 +11,7 @@ func newTuiCmd() *cobra.Command {
 		Use:   "tui",
 		Short: "Launch interactive Terminal UI",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return tui.Run(resolveFilePath())
+			return tui.Run(resolveFilePath(cmd))
 		},
 	}
 }

@@ -1,7 +1,7 @@
 package tui
 
 import (
-	"github.com/charmbracelet/bubbletea"
+	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/GuitarWag/clitasks/internal/board"
 	"github.com/GuitarWag/clitasks/internal/storage"

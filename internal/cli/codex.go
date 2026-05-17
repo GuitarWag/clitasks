@@ -12,6 +12,6 @@ func newCodexCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVarP(&global, "global", "g", false,
-		"Install to ~/.codex/skills/tasks-cli instead of local .codex/skills")
+		"Install to ~/.codex/skills/tasks-cli instead of local .codex/skills/tasks-cli")
 	return cmd
 }

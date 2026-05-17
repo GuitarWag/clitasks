@@ -15,7 +15,7 @@ func newBoardCmd() *cobra.Command {
 		Use:   "board",
 		Short: "Display kanban board view",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			b, err := openBoard()
+			b, err := openBoard(cmd)
 			if err != nil {
 				return err
 			}

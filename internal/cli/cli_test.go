@@ -30,7 +30,6 @@ func withBoardFile(t *testing.T) string {
 	t.Helper()
 	p := filepath.Join(t.TempDir(), "board.md")
 	t.Setenv("TASK_BOARD_FILE", p)
-	t.Cleanup(func() { flagFile = "" })
 	return p
 }
 
@@ -266,7 +265,7 @@ func TestSkillInstall_local(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, out, "SKILL.md installed")
 
-	target := filepath.Join(dir, ".claude", "skills", "SKILL.md")
+	target := filepath.Join(dir, ".claude", "skills", "tasks-cli", "SKILL.md")
 	info, err := os.Stat(target)
 	require.NoError(t, err)
 	assert.Greater(t, info.Size(), int64(0))
@@ -274,13 +273,12 @@ func TestSkillInstall_local(t *testing.T) {
 	out, err = runCmd(t, "codex")
 	require.NoError(t, err)
 	assert.Contains(t, out, "SKILL.md installed")
-	_, err = os.Stat(filepath.Join(dir, ".codex", "skills", "SKILL.md"))
+	_, err = os.Stat(filepath.Join(dir, ".codex", "skills", "tasks-cli", "SKILL.md"))
 	require.NoError(t, err)
 }
 
 func TestGlobalFileFlag_directPath(t *testing.T) {
 	t.Setenv("TASK_BOARD_FILE", "")
-	t.Cleanup(func() { flagFile = "" })
 	p := filepath.Join(t.TempDir(), "explicit.md")
 
 	out, err := runCmd(t, "-f", p, "init", "-n", "Explicit")

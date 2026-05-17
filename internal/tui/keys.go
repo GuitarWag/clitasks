@@ -3,8 +3,12 @@ package tui
 import "github.com/charmbracelet/bubbles/key"
 
 type keyMap struct {
-	Up, Down, Left, Right                       key.Binding
-	Quit, Add, Edit, Delete, Status, Filter, Refresh, Help, Esc, Enter key.Binding
+	// Movement
+	Up, Down, Left, Right key.Binding
+	// Actions
+	Add, Edit, Delete, Status, Filter, Refresh key.Binding
+	// Modal control
+	Help, Esc, Enter, Quit key.Binding
 }
 
 func defaultKeys() keyMap {

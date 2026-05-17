@@ -77,6 +77,11 @@ func filterByStatus(tasks []model.Task, s model.TaskStatus) []model.Task {
 	return out
 }
 
+// atomicWrite writes data to path via tempfile + rename. We preserve the
+// existing file's mode so a shared (e.g. group-readable) tasks.md keeps its
+// permissions across writes. The parent directory is not fsynced; on a crash
+// after rename but before the dir sync the file may be lost — acceptable
+// trade-off for a personal CLI.
 func atomicWrite(path string, data []byte) error {
 	dir := filepath.Dir(path)
 	tmp, err := os.CreateTemp(dir, ".tasks-*.md")
@@ -90,6 +95,12 @@ func atomicWrite(path string, data []byte) error {
 			_ = os.Remove(tmpName)
 		}
 	}()
+	if existing, err := os.Stat(path); err == nil {
+		if err := os.Chmod(tmpName, existing.Mode().Perm()); err != nil {
+			_ = tmp.Close()
+			return err
+		}
+	}
 	if _, err := tmp.Write(data); err != nil {
 		_ = tmp.Close()
 		return err

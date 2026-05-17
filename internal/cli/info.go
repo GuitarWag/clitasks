@@ -11,7 +11,7 @@ func newInfoCmd() *cobra.Command {
 		Use:   "info",
 		Short: "Show board information",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			b, err := openBoard()
+			b, err := openBoard(cmd)
 			if err != nil {
 				return err
 			}

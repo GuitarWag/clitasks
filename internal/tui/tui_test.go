@@ -1,7 +1,7 @@
 package tui
 
 import (
-	"math/rand"
+	"math/rand/v2"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -21,7 +21,7 @@ func setupBoard(t *testing.T) (*board.Board, string) {
 	p := filepath.Join(t.TempDir(), "b.md")
 	s := storage.NewMarkdown(p)
 	clk := func() time.Time { return time.Date(2026, 5, 15, 12, 0, 0, 0, time.UTC) }
-	b, err := board.Open(s, board.WithClock(clk), board.WithRand(rand.New(rand.NewSource(1))))
+	b, err := board.Open(s, board.WithClock(clk), board.WithRand(rand.New(rand.NewPCG(1, 2))))
 	require.NoError(t, err)
 	return b, p
 }

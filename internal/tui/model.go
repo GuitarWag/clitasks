@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -103,18 +104,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) tasksInColumn() []model.Task {
 	by := m.board.ByStatus()
-	out := by[columnOrder[m.colIdx]]
-	if m.filter == "" {
-		return out
+	return applyFilter(by[columnOrder[m.colIdx]], m.filter)
+}
+
+func applyFilter(tasks []model.Task, filter string) []model.Task {
+	if filter == "" {
+		return tasks
 	}
-	q := strings.ToLower(m.filter)
-	filtered := make([]model.Task, 0, len(out))
-	for _, t := range out {
+	q := strings.ToLower(filter)
+	out := make([]model.Task, 0, len(tasks))
+	for _, t := range tasks {
 		if matchesFilter(t, q) {
-			filtered = append(filtered, t)
+			out = append(out, t)
 		}
 	}
-	return filtered
+	return out
 }
 
 func matchesFilter(t model.Task, q string) bool {
@@ -159,59 +163,59 @@ func (m Model) updateBoard(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	switch {
-	case keyMatches(km, m.keys.Quit):
+	case key.Matches(km, m.keys.Quit):
 		return m, tea.Quit
-	case keyMatches(km, m.keys.Up):
+	case key.Matches(km, m.keys.Up):
 		if m.rowIdx > 0 {
 			m.rowIdx--
 		}
-	case keyMatches(km, m.keys.Down):
+	case key.Matches(km, m.keys.Down):
 		tasks := m.tasksInColumn()
 		if m.rowIdx < len(tasks)-1 {
 			m.rowIdx++
 		}
-	case keyMatches(km, m.keys.Left):
+	case key.Matches(km, m.keys.Left):
 		if m.colIdx > 0 {
 			m.colIdx--
 			m.rowIdx = 0
 		}
-	case keyMatches(km, m.keys.Right):
+	case key.Matches(km, m.keys.Right):
 		if m.colIdx < len(columnOrder)-1 {
 			m.colIdx++
 			m.rowIdx = 0
 		}
-	case keyMatches(km, m.keys.Add):
+	case key.Matches(km, m.keys.Add):
 		m.mode = modeAdd
 		m.form = newAddForm(m.styles)
 		return m, m.form.focusFirst()
-	case keyMatches(km, m.keys.Edit):
+	case key.Matches(km, m.keys.Edit):
 		if t, ok := m.selectedTask(); ok {
 			m.mode = modeEdit
 			m.form = newEditForm(m.styles, t)
 			return m, m.form.focusFirst()
 		}
-	case keyMatches(km, m.keys.Delete):
+	case key.Matches(km, m.keys.Delete):
 		if _, ok := m.selectedTask(); ok {
 			m.mode = modeDelete
 		}
-	case keyMatches(km, m.keys.Status):
+	case key.Matches(km, m.keys.Status):
 		if _, ok := m.selectedTask(); ok {
 			m.mode = modeStatus
 			m.statusSel = 0
 		}
-	case keyMatches(km, m.keys.Filter):
+	case key.Matches(km, m.keys.Filter):
 		m.mode = modeFilter
 		m.filterIn.SetValue(m.filter)
 		return m, m.filterIn.Focus()
-	case keyMatches(km, m.keys.Refresh):
+	case key.Matches(km, m.keys.Refresh):
 		if b, err := board.Open(storage.NewMarkdown(m.filePath)); err == nil {
 			m.board = b
 			m.clampSelection()
 			m.flash = "reloaded"
 		}
-	case keyMatches(km, m.keys.Help):
+	case key.Matches(km, m.keys.Help):
 		m.mode = modeHelp
-	case keyMatches(km, m.keys.Esc):
+	case key.Matches(km, m.keys.Esc):
 		if m.filter != "" {
 			m.filter = ""
 			m.clampSelection()
@@ -289,17 +293,7 @@ func (m Model) renderColumns() []string {
 
 	out := make([]string, len(columnOrder))
 	for i, st := range columnOrder {
-		tasks := by[st]
-		if m.filter != "" {
-			q := strings.ToLower(m.filter)
-			f := tasks[:0:0]
-			for _, t := range tasks {
-				if matchesFilter(t, q) {
-					f = append(f, t)
-				}
-			}
-			tasks = f
-		}
+		tasks := applyFilter(by[st], m.filter)
 
 		var inner strings.Builder
 		fmt.Fprintln(&inner, m.styles.colTitle.Render(fmt.Sprintf("%s (%d)", columnLabel[st], len(tasks))))
@@ -358,13 +352,3 @@ func (m Model) renderTaskLine(b *strings.Builder, t model.Task, selected bool) {
 	}
 }
 
-func keyMatches(msg tea.KeyMsg, b interface {
-	Keys() []string
-}) bool {
-	for _, k := range b.Keys() {
-		if msg.String() == k {
-			return true
-		}
-	}
-	return false
-}

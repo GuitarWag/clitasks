@@ -15,11 +15,11 @@ func newDeleteCmd() *cobra.Command {
 		Short: "Delete a task",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			b, err := openBoard()
+			b, err := openBoard(cmd)
 			if err != nil {
 				return err
 			}
-			if err := b.Delete(args[0]); err != nil {
+			if _, err := b.Delete(args[0]); err != nil {
 				if errors.Is(err, board.ErrNotFound) {
 					fmt.Fprintln(cmd.OutOrStdout(), styleError.Render("✗ Task not found: "+args[0]))
 					return nil

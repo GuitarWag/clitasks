@@ -15,7 +15,7 @@ func newExportCmd() *cobra.Command {
 		Use:   "export",
 		Short: "Export board data",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			b, err := openBoard()
+			b, err := openBoard(cmd)
 			if err != nil {
 				return err
 			}
@@ -25,7 +25,7 @@ func newExportCmd() *cobra.Command {
 				return nil
 			}
 			if output != "" {
-				if err := os.WriteFile(output, data, 0o644); err != nil {
+				if err := os.WriteFile(output, data, 0o600); err != nil {
 					return err
 				}
 				fmt.Fprintln(cmd.OutOrStdout(), styleSuccess.Render("✓ Exported to "+output))

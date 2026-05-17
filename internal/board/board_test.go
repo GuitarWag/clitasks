@@ -1,7 +1,7 @@
 package board
 
 import (
-	"math/rand"
+	"math/rand/v2"
 	"path/filepath"
 	"testing"
 	"time"
@@ -17,7 +17,7 @@ func newTestBoard(t *testing.T) *Board {
 	p := filepath.Join(t.TempDir(), "b.md")
 	s := storage.NewMarkdown(p)
 	clk := func() time.Time { return time.Date(2026, 5, 15, 12, 0, 0, 0, time.UTC) }
-	b, err := Open(s, WithClock(clk), WithRand(rand.New(rand.NewSource(1))))
+	b, err := Open(s, WithClock(clk), WithRand(rand.New(rand.NewPCG(1, 2))))
 	require.NoError(t, err)
 	return b
 }
@@ -91,14 +91,17 @@ func TestMove(t *testing.T) {
 func TestDelete(t *testing.T) {
 	b := newTestBoard(t)
 	tk, _ := b.Add("x", AddInput{})
-	require.NoError(t, b.Delete(tk.ID))
+	removed, err := b.Delete(tk.ID)
+	require.NoError(t, err)
+	assert.Equal(t, tk.ID, removed.ID, "Delete returns the removed task")
 	_, ok := b.Get(tk.ID)
 	assert.False(t, ok)
 }
 
 func TestDelete_notFound(t *testing.T) {
 	b := newTestBoard(t)
-	assert.ErrorIs(t, b.Delete("nope"), ErrNotFound)
+	_, err := b.Delete("nope")
+	assert.ErrorIs(t, err, ErrNotFound)
 }
 
 func TestList_filters(t *testing.T) {
@@ -144,14 +147,22 @@ func TestByStatus(t *testing.T) {
 
 func TestUpdateMeta(t *testing.T) {
 	b := newTestBoard(t)
-	require.NoError(t, b.UpdateMeta("New Name", "New Desc"))
+	require.NoError(t, b.UpdateMeta(MetaInput{Name: ptr("New Name"), Description: ptr("New Desc")}))
 	assert.Equal(t, "New Name", b.Info().Name)
 	assert.Equal(t, "New Desc", b.Info().Description)
 }
 
+func TestUpdateMeta_clearsWithEmptyPointer(t *testing.T) {
+	b := newTestBoard(t)
+	require.NoError(t, b.UpdateMeta(MetaInput{Name: ptr("Initial"), Description: ptr("Initial desc")}))
+	require.NoError(t, b.UpdateMeta(MetaInput{Description: ptr("")}))
+	assert.Equal(t, "Initial", b.Info().Name, "name preserved when nil")
+	assert.Empty(t, b.Info().Description, "empty pointer clears description")
+}
+
 func TestNewID_format(t *testing.T) {
 	now := time.Date(2026, 5, 15, 12, 0, 0, 0, time.UTC)
-	r := rand.New(rand.NewSource(42))
+	r := rand.New(rand.NewPCG(42, 0))
 	id := newID(now, r)
 	assert.Regexp(t, `^T-[0-9A-Z]+-[0-9A-Z]{3}$`, id)
 }

@@ -12,7 +12,7 @@ func newShowCmd() *cobra.Command {
 		Short: "Show task details",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			b, err := openBoard()
+			b, err := openBoard(cmd)
 			if err != nil {
 				return err
 			}

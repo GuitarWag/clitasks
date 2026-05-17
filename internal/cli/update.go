@@ -42,7 +42,7 @@ func newUpdateCmd() *cobra.Command {
 				in.DueDate = &due
 			}
 
-			b, err := openBoard()
+			b, err := openBoard(cmd)
 			if err != nil {
 				return err
 			}

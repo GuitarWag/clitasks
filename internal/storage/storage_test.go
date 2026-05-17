@@ -289,6 +289,28 @@ func TestRead_outOfOrderSections(t *testing.T) {
 	assert.Equal(t, model.StatusTodo, statuses["T-T1"])
 }
 
+func TestRead_descriptionContainingCreatedKeyword(t *testing.T) {
+	p := tmpFile(t)
+	md := strings.Join([]string{
+		"# Board: T",
+		"",
+		"## TODO",
+		"",
+		"- [ ] [T-X1] **Audit logs** `priority:medium`",
+		"  > Created: by alice; Updated: yesterday",
+		"  > Created: 2026-01-01T00:00:00Z | Updated: 2026-01-02T00:00:00Z",
+		"",
+	}, "\n")
+	require.NoError(t, os.WriteFile(p, []byte(md), 0o644))
+
+	b, err := NewMarkdown(p).Read()
+	require.NoError(t, err)
+	require.Len(t, b.Tasks, 1)
+	assert.Equal(t, "Created: by alice; Updated: yesterday", b.Tasks[0].Description)
+	assert.Equal(t, "2026-01-01T00:00:00Z", b.Tasks[0].CreatedAt.UTC().Format(time.RFC3339))
+	assert.Equal(t, "2026-01-02T00:00:00Z", b.Tasks[0].UpdatedAt.UTC().Format(time.RFC3339))
+}
+
 func TestPath_returnsConfigured(t *testing.T) {
 	s := NewMarkdown("/foo/bar.md")
 	assert.Equal(t, "/foo/bar.md", s.Path())

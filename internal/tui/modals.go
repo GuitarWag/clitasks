@@ -190,7 +190,7 @@ func (m Model) updateDelete(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch km.String() {
 	case "y", "Y":
 		if t, ok := m.selectedTask(); ok {
-			if err := m.board.Delete(t.ID); err == nil {
+			if _, err := m.board.Delete(t.ID); err == nil {
 				m.flash = "deleted " + t.ID
 			}
 			m.clampSelection()

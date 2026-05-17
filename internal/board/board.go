@@ -2,7 +2,8 @@ package board
 
 import (
 	"errors"
-	"math/rand"
+	"math/rand/v2"
+	"slices"
 	"time"
 
 	"github.com/GuitarWag/clitasks/internal/model"
@@ -27,7 +28,7 @@ func Open(s storage.Store, opts ...Option) (*Board, error) {
 	b := &Board{
 		store: s,
 		clock: func() time.Time { return time.Now().UTC() },
-		rng:   rand.New(rand.NewSource(time.Now().UnixNano())),
+		rng:   rand.New(rand.NewPCG(uint64(time.Now().UnixNano()), uint64(time.Now().UnixNano()>>32))),
 	}
 	for _, opt := range opts {
 		opt(b)
@@ -81,7 +82,7 @@ func (b *Board) Add(title string, in AddInput) (model.Task, error) {
 		Status:      model.StatusTodo,
 		Priority:    priority,
 		Assignee:    in.Assignee,
-		Tags:        in.Tags,
+		Tags:        slices.Clone(in.Tags),
 		DueDate:     in.DueDate,
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -114,7 +115,7 @@ func (b *Board) Update(id string, in UpdateInput) (model.Task, error) {
 		t.Assignee = *in.Assignee
 	}
 	if in.Tags != nil {
-		t.Tags = *in.Tags
+		t.Tags = slices.Clone(*in.Tags)
 	}
 	if in.DueDate != nil {
 		t.DueDate = *in.DueDate
@@ -134,22 +135,31 @@ func (b *Board) Move(id string, s model.TaskStatus) (model.Task, error) {
 	return b.Update(id, UpdateInput{Status: &s})
 }
 
-func (b *Board) Delete(id string) error {
+func (b *Board) Delete(id string) (model.Task, error) {
 	idx := b.indexOf(id)
 	if idx < 0 {
-		return ErrNotFound
+		return model.Task{}, ErrNotFound
 	}
+	removed := b.data.Tasks[idx]
 	b.data.Tasks = append(b.data.Tasks[:idx], b.data.Tasks[idx+1:]...)
 	b.data.UpdatedAt = b.clock().UTC()
-	return b.save()
+	if err := b.save(); err != nil {
+		return model.Task{}, err
+	}
+	return removed, nil
 }
 
-func (b *Board) UpdateMeta(name, description string) error {
-	if name != "" {
-		b.data.Name = name
+type MetaInput struct {
+	Name        *string
+	Description *string
+}
+
+func (b *Board) UpdateMeta(in MetaInput) error {
+	if in.Name != nil {
+		b.data.Name = *in.Name
 	}
-	if description != "" {
-		b.data.Description = description
+	if in.Description != nil {
+		b.data.Description = *in.Description
 	}
 	b.data.UpdatedAt = b.clock().UTC()
 	return b.save()

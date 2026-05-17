@@ -12,9 +12,8 @@ import (
 	"github.com/GuitarWag/clitasks/internal/board"
 	"github.com/GuitarWag/clitasks/internal/model"
 	"github.com/GuitarWag/clitasks/internal/storage"
+	"github.com/GuitarWag/clitasks/internal/theme"
 )
-
-var flagFile string
 
 func newRootCmd(version string) *cobra.Command {
 	root := &cobra.Command{
@@ -24,7 +23,7 @@ func newRootCmd(version string) *cobra.Command {
 		SilenceUsage:  true,
 		SilenceErrors: false,
 	}
-	root.PersistentFlags().StringVarP(&flagFile, "file", "f", "",
+	root.PersistentFlags().StringP("file", "f", "",
 		"Path to the markdown file (default: $TASK_BOARD_FILE or tasks.md)")
 
 	root.AddCommand(
@@ -44,9 +43,11 @@ func Execute(version string) int {
 	return 0
 }
 
-func resolveFilePath() string {
-	if flagFile != "" {
-		return flagFile
+func resolveFilePath(cmd *cobra.Command) string {
+	if cmd != nil {
+		if v, _ := cmd.Flags().GetString("file"); v != "" {
+			return v
+		}
 	}
 	if v := os.Getenv("TASK_BOARD_FILE"); v != "" {
 		return v
@@ -54,8 +55,8 @@ func resolveFilePath() string {
 	return storage.DefaultFile
 }
 
-func openBoard() (*board.Board, error) {
-	return board.Open(storage.NewMarkdown(resolveFilePath()))
+func openBoard(cmd *cobra.Command) (*board.Board, error) {
+	return board.Open(storage.NewMarkdown(resolveFilePath(cmd)))
 }
 
 func splitTags(s string) []string {
@@ -74,31 +75,22 @@ func splitTags(s string) []string {
 }
 
 var (
-	styleSuccess = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
-	styleError   = lipgloss.NewStyle().Foreground(lipgloss.Color("1"))
-	styleWarn    = lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
-	styleDim     = lipgloss.NewStyle().Faint(true)
-	styleBold    = lipgloss.NewStyle().Bold(true)
-	styleCyan    = lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
-	styleGreen   = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
-	styleYellow  = lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
-	styleBlue    = lipgloss.NewStyle().Foreground(lipgloss.Color("4"))
-	styleMagenta = lipgloss.NewStyle().Foreground(lipgloss.Color("5"))
-	styleRed     = lipgloss.NewStyle().Foreground(lipgloss.Color("1"))
-	styleGray    = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
+	styleSuccess = theme.Success
+	styleError   = theme.Error
+	styleWarn    = theme.Warn
+	styleDim     = theme.Dim
+	styleBold    = theme.Bold
+	styleCyan    = theme.Cyan
+	styleGreen   = theme.Green
+	styleYellow  = theme.Yellow
+	styleBlue    = theme.Blue
+	styleMagenta = theme.Magenta
+	styleRed     = theme.Red
+	styleGray    = theme.Gray
 )
 
 func priorityStyle(p model.TaskPriority) lipgloss.Style {
-	switch p {
-	case model.PriorityCritical:
-		return styleRed
-	case model.PriorityHigh:
-		return styleYellow
-	case model.PriorityMedium:
-		return styleBlue
-	default:
-		return styleGray
-	}
+	return theme.PriorityStyle(p)
 }
 
 func statusGlyph(s model.TaskStatus) string {

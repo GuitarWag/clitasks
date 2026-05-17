@@ -20,7 +20,7 @@ func newAddCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			b, err := openBoard()
+			b, err := openBoard(cmd)
 			if err != nil {
 				return err
 			}

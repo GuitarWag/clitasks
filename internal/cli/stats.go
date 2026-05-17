@@ -1,8 +1,9 @@
 package cli
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 
 	"github.com/spf13/cobra"
 
@@ -14,7 +15,7 @@ func newStatsCmd() *cobra.Command {
 		Use:   "stats",
 		Short: "Show board statistics",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			b, err := openBoard()
+			b, err := openBoard(cmd)
 			if err != nil {
 				return err
 			}
@@ -58,7 +59,7 @@ func newStatsCmd() *cobra.Command {
 				for n, c := range assignees {
 					rows = append(rows, kv{n, c})
 				}
-				sort.Slice(rows, func(i, j int) bool { return rows[i].count > rows[j].count })
+				slices.SortFunc(rows, func(a, b kv) int { return cmp.Compare(b.count, a.count) })
 
 				fmt.Fprintln(out, styleBold.Render("Assignee Breakdown:"))
 				for _, r := range rows {

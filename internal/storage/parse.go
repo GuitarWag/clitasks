@@ -11,14 +11,19 @@ import (
 )
 
 var (
-	taskLineRe        = regexp.MustCompile(`^- \[.\] \[(.+?)\] \*\*(.+?)\*\*(.*)$`)
-	priorityRe        = regexp.MustCompile("`priority:(\\w+)`")
-	assigneeRe        = regexp.MustCompile("`assignee:([^`]+)`")
-	tagsRe            = regexp.MustCompile("`tags:([^`]+)`")
-	dueRe             = regexp.MustCompile("`due:([^`]+)`")
-	createdUpdatedRe  = regexp.MustCompile(`Created:\s*(\S+).*Updated:\s*(\S+)`)
-	createdOnlyRe     = regexp.MustCompile(`Created:\s*(\S+)`)
-	updatedOnlyRe     = regexp.MustCompile(`Updated:\s*(\S+)`)
+	taskLineRe       = regexp.MustCompile(`^- \[.\] \[(.+?)\] \*\*(.+?)\*\*(.*)$`)
+	priorityRe       = regexp.MustCompile("`priority:(\\w+)`")
+	assigneeRe       = regexp.MustCompile("`assignee:([^`]+)`")
+	tagsRe           = regexp.MustCompile("`tags:([^`]+)`")
+	dueRe            = regexp.MustCompile("`due:([^`]+)`")
+	createdUpdatedRe = regexp.MustCompile(`Created:\s*(\S+).*Updated:\s*(\S+)`)
+	createdOnlyRe    = regexp.MustCompile(`Created:\s*(\S+)`)
+	updatedOnlyRe    = regexp.MustCompile(`Updated:\s*(\S+)`)
+	// Task metadata lines emitted by the renderer always look like
+	//   "  > Created: <RFC3339Nano>[ | Updated: <RFC3339Nano>]"
+	// so we anchor on the year prefix to avoid swallowing descriptions
+	// that happen to contain the words "Created" or "Updated".
+	taskMetaLineRe = regexp.MustCompile(`^\s*>\s*(?:Created|Updated):\s*\d{4}-\d{2}-\d{2}T`)
 )
 
 func parseMarkdown(data []byte, clock func() time.Time) *model.Board {
@@ -144,8 +149,7 @@ func parseMarkdown(data []byte, clock func() time.Time) *model.Board {
 			continue
 		}
 
-		if cur != nil && strings.HasPrefix(line, "  >") &&
-			!strings.Contains(line, "Created:") && !strings.Contains(line, "Updated:") {
+		if cur != nil && strings.HasPrefix(line, "  >") && !taskMetaLineRe.MatchString(line) {
 			cur.Description = strings.TrimSpace(strings.TrimPrefix(line, "  >"))
 			continue
 		}

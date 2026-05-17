@@ -11,7 +11,7 @@ import (
 )
 
 func runMove(cmd *cobra.Command, id string, s model.TaskStatus, successPrefix string, style func(string) string) error {
-	b, err := openBoard()
+	b, err := openBoard(cmd)
 	if err != nil {
 		return err
 	}

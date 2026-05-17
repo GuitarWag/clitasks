@@ -12,6 +12,6 @@ func newClaudeCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVarP(&global, "global", "g", false,
-		"Install to ~/.claude/skills/tasks-cli instead of local .claude/skills")
+		"Install to ~/.claude/skills/tasks-cli instead of local .claude/skills/tasks-cli")
 	return cmd
 }

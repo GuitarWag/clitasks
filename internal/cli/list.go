@@ -32,7 +32,7 @@ func newListCmd() *cobra.Command {
 				f.Priority = &p
 			}
 
-			b, err := openBoard()
+			b, err := openBoard(cmd)
 			if err != nil {
 				return err
 			}

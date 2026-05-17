@@ -16,7 +16,7 @@ func installSkill(tool string, global bool, out io.Writer) error {
 		}
 		dir = filepath.Join(home, "."+tool, "skills", "tasks-cli")
 	} else {
-		dir = filepath.Join("."+tool, "skills")
+		dir = filepath.Join("."+tool, "skills", "tasks-cli")
 	}
 
 	if err := os.MkdirAll(dir, 0o755); err != nil {
