@@ -4,29 +4,34 @@ CLI task management tool with Markdown storage, usable by humans and AI agents.
 
 ## Tech Stack
 
-- TypeScript, Node.js
-- `commander` for CLI, `blessed`/`blessed-contrib` for TUI
+- Go (1.22+)
+- `spf13/cobra` for CLI
+- `charmbracelet/bubbletea` + `bubbles` + `lipgloss` for the TUI
 - Markdown files as storage (no database)
 
 ## Build & Dev
 
 ```bash
-npm install        # Install dependencies
-npm run build      # Compile TypeScript (tsc)
-npm run dev -- <cmd>       # Run CLI in dev mode (tsx)
-npm run dev:tui            # Run TUI in dev mode
-npm start -- <cmd>         # Run built CLI
+make build         # build bin/tasks (runs `make sync-skill` first)
+make test          # run all tests with -race
+make lint          # golangci-lint
+make install       # go install ./cmd/tasks
+make run ARGS="list"   # go run ./cmd/tasks list
+
+go run ./cmd/tasks tui     # launch the TUI directly
 ```
 
 ## Project Structure
 
-- `src/` — TypeScript source
-  - `cli.ts` — CLI entry point (commander)
-  - `tui.ts` — Terminal UI (blessed)
-  - `board.ts` — Task board logic
-  - `storage.ts` — Markdown file parser/writer
-  - `export.ts` — Export functionality
-  - `types.ts` — Type definitions
+- `cmd/tasks/` — binary entry point (`main.go`)
+- `internal/model/` — Task/Board types and enums
+- `internal/storage/` — Markdown parser, renderer, atomic writer
+- `internal/board/` — Board service over a `Store`
+- `internal/export/` — JSON / CSV / summary exports
+- `internal/cli/` — Cobra commands; `SKILL.md` is embedded here via `go:embed`
+- `internal/tui/` — Bubble Tea Model / Update / View and modals
+
+The canonical `SKILL.md` lives at the repo root. `make sync-skill` (and every `make build`/`test`) copies it into `internal/cli/SKILL.md` for embedding.
 
 ## Git Rules
 

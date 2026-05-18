@@ -1,157 +1,89 @@
 # Installation Guide
 
-## Quick Install (Global Command)
+## Requirements
 
-The CLI has been installed globally on your Mac. You can now use the `tasks` command from anywhere:
+- Go 1.22 or newer
+
+## Install from source
 
 ```bash
-tasks --version  # Should show: 1.0.0
-tasks --help     # Show all commands
+git clone https://github.com/GuitarWag/clitasks.git
+cd clitasks
+make install        # installs `tasks` into $GOBIN (or $GOPATH/bin)
 ```
 
-## How It Works
+Verify:
 
-The installation created a global symlink using `npm link`. This means:
+```bash
+tasks --version
+tasks --help
+```
 
-- The `tasks` command is available in any directory
-- It points to: `/Users/wagnersilva/.nvm/versions/node/v22.21.1/bin/tasks`
-- Each directory can have its own `tasks.md` file
-- You can work on multiple projects with separate task boards
+Make sure `$GOBIN` (or `$GOPATH/bin`) is on your `PATH`. If you used `make install` and the command isn't found, check:
 
-## Quick Start
+```bash
+go env GOBIN
+go env GOPATH
+```
 
-### 1. Create your first board
+If `GOBIN` is empty, the binary lands in `$GOPATH/bin`. Add that directory to your `PATH`.
+
+## Local build (no install)
+
+```bash
+make build
+./bin/tasks --version
+```
+
+## Quick start
 
 ```bash
 cd ~/myproject
 tasks init --name "My Project"
-```
-
-This creates a `tasks.md` file in the current directory.
-
-### 2. Add a task
-
-```bash
 tasks add "Setup project structure" -p high -a yourname
-```
-
-### 3. View the board
-
-```bash
 tasks board
 ```
 
-### 4. Start working
+## Multiple projects
+
+Each working directory can have its own `tasks.md`:
 
 ```bash
-tasks start T-XXXXX  # Use the task ID from the board
+cd ~/project-a && tasks init --name "Project A"
+cd ~/project-b && tasks init --name "Project B"
 ```
 
-### 5. Complete the task
+## Custom file location
+
+Override the default `tasks.md` with a flag or env var:
 
 ```bash
-tasks complete T-XXXXX
+tasks -f sprint-1.md board
+TASK_BOARD_FILE=~/Documents/my-tasks.md tasks board
 ```
 
-## Multiple Projects
+Put the `export` line in `~/.zshrc` to make it permanent.
 
-You can have different task boards for different projects:
+## Uninstall
+
+Delete the binary that `make install` placed in `$GOBIN`/`$GOPATH/bin`:
 
 ```bash
-cd ~/project-a
-tasks init --name "Project A"
-tasks add "Feature 1" -p high
-
-cd ~/project-b
-tasks init --name "Project B"
-tasks add "Feature 2" -p medium
-
-# Each directory has its own tasks.md file
+rm "$(go env GOPATH)/bin/tasks"   # or your $GOBIN equivalent
 ```
 
-## Uninstall (if needed)
+## Update
 
-To remove the global command:
+Pull and reinstall:
 
 ```bash
-cd /Users/wagnersilva/Desktop/git/wag/clitasks
-npm unlink
+cd /path/to/clitasks
+git pull
+make install
 ```
 
-## Update the CLI
+## Next steps
 
-If you make changes to the source code:
-
-```bash
-cd /Users/wagnersilva/Desktop/git/wag/clitasks
-npm run build  # Rebuild the changes
-# The global command automatically uses the new version
-```
-
-## Environment Variable
-
-You can set a custom default file location:
-
-```bash
-export TASK_BOARD_FILE=~/Documents/my-tasks.md
-tasks board  # Will use ~/Documents/my-tasks.md
-```
-
-Add this to your `~/.zshrc` or `~/.bashrc` to make it permanent.
-
-## Verify Installation
-
-Run these commands to verify everything works:
-
-```bash
-# Check version
-tasks --version
-
-# Show help
-tasks --help
-
-# Create a test board
-cd /tmp
-tasks init --name "Test Board"
-tasks add "Test task" -p high
-tasks board
-```
-
-## Troubleshooting
-
-### Command not found
-
-If you get "command not found", your npm global bin directory might not be in your PATH. Check with:
-
-```bash
-npm bin -g
-```
-
-Make sure this directory is in your PATH environment variable.
-
-### Permission errors
-
-If you get permission errors, you may need to fix npm permissions:
-
-```bash
-mkdir -p ~/.npm-global
-npm config set prefix '~/.npm-global'
-echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.zshrc
-source ~/.zshrc
-```
-
-Then reinstall:
-
-```bash
-cd /Users/wagnersilva/Desktop/git/wag/clitasks
-npm link
-```
-
-## Next Steps
-
-- Read [README.md](README.md) for detailed documentation
-- Check [QUICKSTART.md](QUICKSTART.md) for a 5-minute tutorial
-- See [COLLABORATION_EXAMPLE.md](COLLABORATION_EXAMPLE.md) for human-AI workflows
-- View [example-tasks.md](example-tasks.md) for inspiration
-
-Enjoy your new task management system!
+- [README.md](README.md) — full reference
+- [QUICKSTART.md](QUICKSTART.md) — short tour
+- [TUI_GUIDE.md](TUI_GUIDE.md) — TUI keybindings and modes
