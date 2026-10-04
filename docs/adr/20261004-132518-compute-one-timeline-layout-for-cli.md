@@ -1,7 +1,7 @@
 ---
 id: 20261004-132518-compute-one-timeline-layout-for-cli
 title: Compute one timeline layout for CLI, TUI and Mermaid
-status: proposed
+status: accepted
 date: 2026-10-04
 branch: chore/adrlog
 worktree: clitasks

@@ -5,7 +5,7 @@ Decisions:
 - [Add start and after fields to the task line](../adr/20261004-132518-add-start-and-after-fields-to.md)
 - [Compute one timeline layout for CLI, TUI and Mermaid](../adr/20261004-132518-compute-one-timeline-layout-for-cli.md)
 
-Both records are `proposed`. Change them to `accepted` when slice 1 and slice 3 merge.
+Status: done. Both records are `accepted`.
 
 ## Scope
 
@@ -98,8 +98,7 @@ Files: `internal/export/export.go`, `internal/cli/export.go`.
   one `section` for each status that has bars, and one line for each bar:
   `<title> :<status-tag>, <mermaid-id>, <start>, <end>`.
   - The tag is `done` for done tasks, `active` for in-progress tasks and `crit` for blocked tasks.
-- `<mermaid-id>` is the task ID with `-` changed to `_`. Before you merge, check in the Mermaid
-  live editor if Mermaid accepts the original ID.
+- `<mermaid-id>` is the task ID unchanged. The Mermaid validator accepts the hyphens.
 - In the title, escape `:` and `#`, because Mermaid parses them.
 - Update the `--format` help text and the error message.
 

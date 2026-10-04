@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- `tasks timeline`: an ASCII Gantt chart. It uses a week scale when the range does not fit.
+- TUI timeline view on the `t` key, with row selection and week scrolling.
+- `tasks export --format gantt`: Mermaid gantt output.
+- `start` and `after` task fields, with `--start` and `--after` on `add` and `update`.
+- Due and Start steps in the TUI add and edit form.
+
+### Changed
+- `--due` and `--start` accept only `YYYY-MM-DD`. Old boards with other due values still load, and those tasks show as unscheduled in the timeline.
+- A move to in-progress sets the start date to today if it is empty.
+- `delete` removes the deleted ID from the `after` list of other tasks.
+
 ## [2.1.0] - 2026-02-01
 
 ### Changed - MAJOR UX IMPROVEMENT

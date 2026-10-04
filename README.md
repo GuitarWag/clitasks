@@ -52,7 +52,8 @@ tasks codex
 
 - **Markdown-based storage**: Tasks are stored in human-readable `.md` files
 - **Kanban board**: Organize tasks in TODO, IN PROGRESS, DONE, and BLOCKED columns
-- **Rich task metadata**: Priority, assignee, tags, due dates, descriptions
+- **Rich task metadata**: Priority, assignee, tags, start and due dates, dependencies, descriptions
+- **Timeline**: Gantt chart in the CLI and the TUI, and Mermaid export
 - **CLI interface**: Fast and efficient command-line operations
 - **Interactive TUI**: Beautiful terminal UI with keyboard navigation
 - **Real-time filtering**: Search tasks across all columns instantly
@@ -112,7 +113,11 @@ Options:
 - `-p, --priority <priority>`: Priority (low|medium|high|critical)
 - `-a, --assignee <name>`: Assignee name
 - `-t, --tags <tags>`: Comma-separated tags
-- `--due <date>`: Due date (YYYY-MM-DD)
+- `--due <date>`: Due date (YYYY-MM-DD). The CLI rejects other formats.
+- `--start <date>`: Start date (YYYY-MM-DD). It must not be after the due date.
+- `--after <ids>`: Comma-separated IDs of tasks that this task waits for. The CLI rejects unknown IDs and cycles.
+
+`tasks start` (and any move to in-progress) sets the start date to today if the task has no start date. `tasks delete` removes the deleted ID from the `after` list of other tasks.
 
 ### View Tasks
 
@@ -132,6 +137,25 @@ tasks list --tags backend
 # Show detailed task information
 tasks show T-ML31897Y-TKP
 ```
+
+### Timeline
+
+```bash
+tasks timeline                         # Gantt chart of all tasks
+tasks timeline --status in-progress    # Same filters as list: -s, -a, -t
+tasks timeline --width 120             # Default: terminal width, or 100
+```
+
+```
+                 06-01  06-08  06-15  06-22
+T-1 Design       █████         |
+T-2 Build the p…        █████  |
+T-3 Open                  █████>
+```
+
+Each bar starts on the start date, or on the creation date if the task has no start date. It ends on the due date. A done task without a due date ends on its last update. Other tasks without a due date end today and show `>`. `|` is today. If the range does not fit in the width, the chart uses one column per week.
+
+Under the chart, the command lists `after` conflicts and tasks with a due date that is not YYYY-MM-DD. A conflict does not move a bar.
 
 ### Update Tasks
 
@@ -188,6 +212,9 @@ tasks export --format csv
 # Export summary
 tasks export --format summary
 
+# Export a Mermaid gantt chart (renders on GitHub)
+tasks export --format gantt
+
 # Save to file
 tasks export --format json -o backup.json
 tasks export --format csv -o report.csv
@@ -225,7 +252,7 @@ The task board is stored in a human and AI-readable Markdown format:
 
 ## IN PROGRESS
 
-- [>] [T-DEF456] **Create database schema** `priority:medium` `assignee:bob` `tags:backend,database`
+- [>] [T-DEF456] **Create database schema** `priority:medium` `assignee:bob` `tags:backend,database` `due:2026-02-20` `start:2026-02-10` `after:T-GHI789`
   > Design and implement PostgreSQL schema
   > Created: 2026-02-01T00:58:22.510Z | Updated: 2026-02-01T00:58:22.510Z
 

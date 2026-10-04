@@ -1,7 +1,7 @@
 ---
 id: 20261004-132518-add-start-and-after-fields-to
 title: Add start and after fields to the task line
-status: proposed
+status: accepted
 date: 2026-10-04
 branch: chore/adrlog
 worktree: clitasks
