@@ -30,10 +30,12 @@ const (
 	fieldPriority
 	fieldAssignee
 	fieldTags
+	fieldDue
+	fieldStart
 )
 
 func newAddForm(_ styles) taskForm {
-	return taskForm{fields: makeFields("", "", "medium", "", "")}
+	return taskForm{fields: makeFields("", "", "medium", "", "", "", "")}
 }
 
 func newEditForm(_ styles, t model.Task) taskForm {
@@ -41,11 +43,12 @@ func newEditForm(_ styles, t model.Task) taskForm {
 		editingID: t.ID,
 		fields: makeFields(
 			t.Title, t.Description, string(t.Priority), t.Assignee, strings.Join(t.Tags, ","),
+			t.DueDate, t.Start,
 		),
 	}
 }
 
-func makeFields(title, desc, prio, assn, tags string) []formField {
+func makeFields(title, desc, prio, assn, tags, due, start string) []formField {
 	mk := func(label, val, placeholder string) formField {
 		ti := textinput.New()
 		ti.Placeholder = placeholder
@@ -60,6 +63,8 @@ func makeFields(title, desc, prio, assn, tags string) []formField {
 		mk("Priority", prio, "low|medium|high|critical"),
 		mk("Assignee", assn, "(optional)"),
 		mk("Tags", tags, "comma,separated"),
+		mk("Due", due, "YYYY-MM-DD (optional)"),
+		mk("Start", start, "YYYY-MM-DD (optional)"),
 	}
 }
 
@@ -123,6 +128,8 @@ func (m Model) submitForm() (tea.Model, tea.Cmd) {
 	desc := strings.TrimSpace(m.form.fields[fieldDesc].input.Value())
 	assignee := strings.TrimSpace(m.form.fields[fieldAssignee].input.Value())
 	tagsStr := strings.TrimSpace(m.form.fields[fieldTags].input.Value())
+	due := strings.TrimSpace(m.form.fields[fieldDue].input.Value())
+	start := strings.TrimSpace(m.form.fields[fieldStart].input.Value())
 	var tags []string
 	for _, t := range strings.Split(tagsStr, ",") {
 		if v := strings.TrimSpace(t); v != "" {
@@ -136,17 +143,29 @@ func (m Model) submitForm() (tea.Model, tea.Cmd) {
 			Priority:    priority,
 			Assignee:    assignee,
 			Tags:        tags,
-			DueDate:     "",
+			DueDate:     due,
+			Start:       start,
 		})
 	} else {
 		tagsVal := tags
-		_, err = m.board.Update(m.form.editingID, board.UpdateInput{
+		in := board.UpdateInput{
 			Title:       &title,
 			Description: &desc,
 			Priority:    &priority,
 			Assignee:    &assignee,
 			Tags:        &tagsVal,
-		})
+		}
+		// Send dates only when they changed, so an old free-form due date
+		// that the user did not touch does not fail validation.
+		if cur, ok := m.board.Get(m.form.editingID); ok {
+			if due != cur.DueDate {
+				in.DueDate = &due
+			}
+			if start != cur.Start {
+				in.Start = &start
+			}
+		}
+		_, err = m.board.Update(m.form.editingID, in)
 	}
 	if err != nil {
 		m.form.err = err.Error()
@@ -230,7 +249,9 @@ func (m Model) updateStatusMenu(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case "enter":
 		if t, ok := m.selectedTask(); ok {
-			if _, err := m.board.Move(t.ID, columnOrder[m.statusSel]); err == nil {
+			if _, err := m.board.Move(t.ID, columnOrder[m.statusSel]); err != nil {
+				m.flash = "✗ " + err.Error()
+			} else {
 				m.flash = "moved " + t.ID + " → " + string(columnOrder[m.statusSel])
 			}
 			m.clampSelection()
@@ -316,6 +337,8 @@ func (m Model) viewHelp() string {
 		"d               delete selected task",
 		"s               move task to different status",
 		"f               open filter",
+		"t               toggle timeline (Gantt) view",
+		"←/h →/l         scroll the timeline a week",
 		"r               reload from disk",
 		"?               toggle this help",
 		"esc             cancel modal · clear filter",

@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -332,4 +333,91 @@ func TestSkillInstall_global(t *testing.T) {
 
 	_, err = os.Stat(filepath.Join(home, ".claude", "skills", "tasks-cli", "SKILL.md"))
 	require.NoError(t, err)
+}
+
+func TestAddUpdate_startAndAfter(t *testing.T) {
+	p := withBoardFile(t)
+	out, err := runCmd(t, "add", "first")
+	require.NoError(t, err)
+	first := idRe.FindString(out)
+
+	out, err = runCmd(t, "add", "second", "--start", "2026-06-01", "--due", "2026-06-05", "--after", first)
+	require.NoError(t, err)
+	second := idRe.FindString(out)
+	assert.Contains(t, out, "Start: 2026-06-01")
+	assert.Contains(t, out, "After: "+first)
+
+	data, _ := os.ReadFile(p)
+	assert.Contains(t, string(data), "`start:2026-06-01` `after:"+first+"`")
+
+	_, err = runCmd(t, "update", second, "--after", "")
+	require.NoError(t, err)
+	data, _ = os.ReadFile(p)
+	assert.NotContains(t, string(data), "`after:")
+}
+
+func TestAdd_rejectsBadDue(t *testing.T) {
+	withBoardFile(t)
+	_, err := runCmd(t, "add", "x", "--due", "next friday")
+	assert.ErrorContains(t, err, "YYYY-MM-DD")
+}
+
+func TestDelete_reportsRemovedAfterRefs(t *testing.T) {
+	withBoardFile(t)
+	out, _ := runCmd(t, "add", "a")
+	a := idRe.FindString(out)
+	out, _ = runCmd(t, "add", "b", "--after", a)
+	b := idRe.FindString(out)
+
+	out, err := runCmd(t, "delete", a)
+	require.NoError(t, err)
+	assert.Contains(t, out, "Removed from after: "+b)
+}
+
+func TestTimeline(t *testing.T) {
+	withBoardFile(t)
+	old := timelineNow
+	timelineNow = func() time.Time { return time.Date(2026, 6, 15, 12, 0, 0, 0, time.Local) }
+	t.Cleanup(func() { timelineNow = old })
+
+	out, _ := runCmd(t, "add", "design", "--start", "2026-06-01", "--due", "2026-06-10")
+	a := idRe.FindString(out)
+	out, _ = runCmd(t, "add", "build", "--start", "2026-06-05", "--due", "2026-06-12", "--after", a)
+	b := idRe.FindString(out)
+
+	out, err := runCmd(t, "timeline", "--width", "60")
+	require.NoError(t, err)
+	lines := strings.Split(out, "\n")
+	require.GreaterOrEqual(t, len(lines), 3)
+	assert.Contains(t, lines[1], a)
+	assert.Contains(t, lines[1], "██████████")
+	assert.Contains(t, lines[2], b)
+	assert.Contains(t, out, "1 column = 1 day")
+	assert.Contains(t, out, b+" starts 2026-06-05, before "+a+" ends 2026-06-10")
+
+	out, err = runCmd(t, "timeline", "--status", "done")
+	require.NoError(t, err)
+	assert.Contains(t, out, "No tasks found")
+}
+
+func TestTimeline_listsUnscheduled(t *testing.T) {
+	p := withBoardFile(t)
+	md := "# Board: B\n\n## TODO\n\n- [ ] [T-OLD-001] **old** `priority:low` `due:next friday`\n"
+	require.NoError(t, os.WriteFile(p, []byte(md), 0o644))
+
+	out, err := runCmd(t, "timeline")
+	require.NoError(t, err)
+	assert.Contains(t, out, "Unscheduled")
+	assert.Contains(t, out, "T-OLD-001 old due:next friday")
+}
+
+func TestTimeline_unscheduledNamesTheBadField(t *testing.T) {
+	p := withBoardFile(t)
+	md := "# Board: B\n\n## TODO\n\n- [ ] [T-OLD-002] **bad start** `priority:low` `start:next-week`\n"
+	require.NoError(t, os.WriteFile(p, []byte(md), 0o644))
+
+	out, err := runCmd(t, "timeline")
+	require.NoError(t, err)
+	assert.Contains(t, out, "T-OLD-002 bad start start:next-week")
+	assert.NotContains(t, out, "due:")
 }

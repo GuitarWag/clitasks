@@ -30,7 +30,7 @@ func newRootCmd(version string) *cobra.Command {
 		newInitCmd(), newAddCmd(), newListCmd(), newBoardCmd(), newShowCmd(),
 		newUpdateCmd(), newMoveCmd(), newStartCmd(), newCompleteCmd(),
 		newBlockCmd(), newDeleteCmd(), newInfoCmd(), newStatsCmd(),
-		newExportCmd(), newTuiCmd(), newClaudeCmd(), newCodexCmd(),
+		newExportCmd(), newTimelineCmd(), newTuiCmd(), newClaudeCmd(), newCodexCmd(),
 	)
 	return root
 }
@@ -123,6 +123,12 @@ func renderTask(w io.Writer, t model.Task, detailed bool) {
 	}
 	if t.DueDate != "" {
 		fmt.Fprintf(w, "  Due: %s\n", styleYellow.Render(t.DueDate))
+	}
+	if t.Start != "" {
+		fmt.Fprintf(w, "  Start: %s\n", styleYellow.Render(t.Start))
+	}
+	if len(t.After) > 0 {
+		fmt.Fprintf(w, "  After: %s\n", styleCyan.Render(strings.Join(t.After, ", ")))
 	}
 	if detailed && t.Description != "" {
 		fmt.Fprintf(w, "  %s\n", styleDim.Render(t.Description))

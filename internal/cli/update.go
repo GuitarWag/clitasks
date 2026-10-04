@@ -11,7 +11,7 @@ import (
 )
 
 func newUpdateCmd() *cobra.Command {
-	var title, desc, priority, assignee, tags, due string
+	var title, desc, priority, assignee, tags, due, start, after string
 	cmd := &cobra.Command{
 		Use:   "update <id>",
 		Short: "Update a task",
@@ -41,6 +41,13 @@ func newUpdateCmd() *cobra.Command {
 			if cmd.Flags().Changed("due") {
 				in.DueDate = &due
 			}
+			if cmd.Flags().Changed("start") {
+				in.Start = &start
+			}
+			if cmd.Flags().Changed("after") {
+				v := splitTags(after)
+				in.After = &v
+			}
 
 			b, err := openBoard(cmd)
 			if err != nil {
@@ -64,6 +71,8 @@ func newUpdateCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&priority, "priority", "p", "", "New priority")
 	cmd.Flags().StringVarP(&assignee, "assignee", "a", "", "New assignee")
 	cmd.Flags().StringVar(&tags, "tags", "", "New tags (comma-separated)")
-	cmd.Flags().StringVar(&due, "due", "", "New due date")
+	cmd.Flags().StringVar(&due, "due", "", "New due date (YYYY-MM-DD, empty to clear)")
+	cmd.Flags().StringVar(&start, "start", "", "New start date (YYYY-MM-DD, empty to clear)")
+	cmd.Flags().StringVar(&after, "after", "", "New comma-separated IDs this task waits for (empty to clear)")
 	return cmd
 }

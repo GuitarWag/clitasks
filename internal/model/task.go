@@ -55,6 +55,15 @@ func ParsePriority(s string) (TaskPriority, error) {
 	return v, nil
 }
 
+// ParseDate parses a calendar date in the YYYY-MM-DD form used by due and start.
+func ParseDate(s string) (time.Time, error) {
+	t, err := time.Parse(time.DateOnly, s)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("invalid date %q (want YYYY-MM-DD)", s)
+	}
+	return t, nil
+}
+
 type Task struct {
 	ID          string       `json:"id"`
 	Title       string       `json:"title"`
@@ -66,6 +75,8 @@ type Task struct {
 	CreatedAt   time.Time    `json:"createdAt"`
 	UpdatedAt   time.Time    `json:"updatedAt"`
 	DueDate     string       `json:"dueDate,omitempty"`
+	Start       string       `json:"start,omitempty"`
+	After       []string     `json:"after,omitempty"`
 }
 
 type Board struct {

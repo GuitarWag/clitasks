@@ -21,13 +21,18 @@ tasks list --detailed        # Include descriptions and timestamps
 tasks show <task-id>         # Show one task in detail
 tasks info                   # Board metadata
 tasks stats                  # Status/priority/assignee breakdown
+tasks timeline               # Gantt chart of tasks by start and due date
+tasks timeline -s in-progress -w 120   # Filter (-s, -a, -t) and set the width
 ```
+
+`tasks timeline` also lists `after` conflicts (a task that starts before a task it waits for ends) and tasks with a due date that is not YYYY-MM-DD.
 
 ### Create tasks
 
 ```bash
 tasks add "Title"
 tasks add "Title" -d "Description" -p high -a claude -t backend,api --due 2026-04-01
+tasks add "Title" --start 2026-03-20 --due 2026-04-01 --after T-ML31897Y-TKP
 ```
 
 Options:
@@ -35,7 +40,9 @@ Options:
 - `-p` priority (low | medium | high | critical) — default: medium
 - `-a` assignee
 - `-t` comma-separated tags
-- `--due` date in YYYY-MM-DD
+- `--due` date in YYYY-MM-DD. The CLI rejects other formats.
+- `--start` date in YYYY-MM-DD. It must not be after `--due`.
+- `--after` comma-separated IDs of tasks that this task waits for. The CLI rejects unknown IDs and cycles.
 
 ### Update tasks
 
@@ -43,6 +50,8 @@ Options:
 tasks update <task-id> -t "New title"
 tasks update <task-id> -d "New description"
 tasks update <task-id> -p critical -a bob --tags backend,urgent --due 2026-05-01
+tasks update <task-id> --start 2026-04-20 --after T-AAA-111,T-BBB-222
+tasks update <task-id> --after ""       # Clear a field with an empty value
 ```
 
 ### Change status
@@ -54,20 +63,27 @@ tasks block <task-id>        # Move to blocked
 tasks move <task-id> todo    # Move to any status
 ```
 
+A move to in-progress sets the start date to today if the task has no start date and is not overdue.
+
 ### Delete
 
 ```bash
 tasks delete <task-id>
 ```
 
+Delete also removes the task ID from the `after` list of other tasks.
+
 ### Export
 
 ```bash
-tasks export                        # JSON to stdout
-tasks export -f csv                 # CSV to stdout
-tasks export -f summary             # Human-readable summary
-tasks export -f json -o backup.json # Write to file
+tasks export                              # JSON to stdout
+tasks export --format csv                 # CSV to stdout
+tasks export --format summary             # Human-readable summary
+tasks export --format gantt               # Mermaid gantt chart
+tasks export --format json -o backup.json # Write to file
 ```
+
+`--format` has no short flag. `-f` is the board file.
 
 ### Initialize a named board
 
@@ -100,7 +116,7 @@ The `tasks.md` file is human-readable Markdown. You can also read/parse it direc
 
 ## IN PROGRESS
 
-- [>] [T-DEF456] **Another task** `priority:medium`
+- [>] [T-DEF456] **Another task** `priority:medium` `due:2026-04-10` `start:2026-04-01` `after:T-ABC123`
 
 ## DONE
 

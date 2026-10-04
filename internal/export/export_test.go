@@ -7,9 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GuitarWag/clitasks/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/GuitarWag/clitasks/internal/model"
 )
 
 func sampleBoard() model.Board {
@@ -104,4 +105,32 @@ func TestRender_dispatch(t *testing.T) {
 
 	_, err = Render(b, "xml")
 	assert.Error(t, err)
+}
+
+func TestToGantt(t *testing.T) {
+	at := func(s string) time.Time {
+		d, _ := time.ParseInLocation(time.DateOnly, s, time.Local)
+		return d.Add(12 * time.Hour)
+	}
+	b := model.Board{Name: "Q3: plan #1", Tasks: []model.Task{
+		{ID: "T-A-001", Title: "Fix: parser; #2", Status: model.StatusDone,
+			Start: "2026-06-01", DueDate: "2026-06-03", CreatedAt: at("2026-06-01")},
+		{ID: "T-B-002", Title: "Build", Status: model.StatusInProgress,
+			Start: "2026-06-04", CreatedAt: at("2026-06-01")},
+		{ID: "T-C-003", Title: "Plan", Status: model.StatusTodo,
+			DueDate: "2026-06-20", CreatedAt: at("2026-06-02")},
+		{ID: "T-D-004", Title: "Old", Status: model.StatusTodo, DueDate: "someday"},
+	}}
+	want := "gantt\n" +
+		"    title Q3#58; plan #35;1\n" +
+		"    dateFormat YYYY-MM-DD\n" +
+		"    inclusiveEndDates\n" +
+		"    section TODO\n" +
+		"    Plan :T-C-003, 2026-06-02, 2026-06-20\n" +
+		"    section IN PROGRESS\n" +
+		"    Build :active, T-B-002, 2026-06-04, 2026-06-15\n" +
+		"    section DONE\n" +
+		"    Fix#58; parser#59; #35;2 :done, T-A-001, 2026-06-01, 2026-06-03\n" +
+		"    %% unscheduled: T-D-004\n"
+	assert.Equal(t, want, string(ToGantt(b, at("2026-06-15"))))
 }

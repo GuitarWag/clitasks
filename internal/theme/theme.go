@@ -7,13 +7,13 @@ import (
 )
 
 const (
-	ColorError    = lipgloss.Color("1")
-	ColorSuccess  = lipgloss.Color("2")
-	ColorWarn     = lipgloss.Color("3")
-	ColorBlue     = lipgloss.Color("4")
-	ColorMagenta  = lipgloss.Color("5")
-	ColorCyan     = lipgloss.Color("6")
-	ColorGray     = lipgloss.Color("8")
+	ColorError   = lipgloss.Color("1")
+	ColorSuccess = lipgloss.Color("2")
+	ColorWarn    = lipgloss.Color("3")
+	ColorBlue    = lipgloss.Color("4")
+	ColorMagenta = lipgloss.Color("5")
+	ColorCyan    = lipgloss.Color("6")
+	ColorGray    = lipgloss.Color("8")
 
 	ColorPriorityCritical = ColorError
 	ColorPriorityHigh     = ColorWarn
@@ -55,4 +55,18 @@ func PriorityColor(p model.TaskPriority) lipgloss.Color {
 
 func PriorityStyle(p model.TaskPriority) lipgloss.Style {
 	return lipgloss.NewStyle().Foreground(PriorityColor(p))
+}
+
+// StatusStyle colors a timeline row by task status.
+func StatusStyle(s model.TaskStatus) lipgloss.Style {
+	switch s {
+	case model.StatusInProgress:
+		return Blue
+	case model.StatusDone:
+		return Green
+	case model.StatusBlocked:
+		return Red
+	default:
+		return lipgloss.NewStyle()
+	}
 }

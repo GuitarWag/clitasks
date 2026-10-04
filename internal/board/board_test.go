@@ -6,10 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GuitarWag/clitasks/internal/model"
-	"github.com/GuitarWag/clitasks/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/GuitarWag/clitasks/internal/model"
+	"github.com/GuitarWag/clitasks/internal/storage"
 )
 
 func newTestBoard(t *testing.T) *Board {
@@ -165,4 +166,129 @@ func TestNewID_format(t *testing.T) {
 	r := rand.New(rand.NewPCG(42, 0))
 	id := newID(now, r)
 	assert.Regexp(t, `^T-[0-9A-Z]+-[0-9A-Z]{3}$`, id)
+}
+
+func TestAdd_validatesDates(t *testing.T) {
+	b := newTestBoard(t)
+	_, err := b.Add("x", AddInput{DueDate: "next friday"})
+	assert.ErrorContains(t, err, "due")
+	_, err = b.Add("x", AddInput{Start: "2026-13-01"})
+	assert.ErrorContains(t, err, "start")
+	_, err = b.Add("x", AddInput{Start: "2026-06-10", DueDate: "2026-06-01"})
+	assert.ErrorContains(t, err, "after due")
+	assert.Empty(t, b.List(Filter{}), "rejected tasks must not be saved")
+
+	tk, err := b.Add("x", AddInput{Start: "2026-06-01", DueDate: "2026-06-01"})
+	require.NoError(t, err)
+	assert.Equal(t, "2026-06-01", tk.Start)
+}
+
+func TestAdd_validatesAfter(t *testing.T) {
+	b := newTestBoard(t)
+	a, err := b.Add("a", AddInput{})
+	require.NoError(t, err)
+
+	_, err = b.Add("b", AddInput{After: []string{"T-NOPE-000"}})
+	assert.ErrorIs(t, err, ErrNotFound)
+
+	tk, err := b.Add("b", AddInput{After: []string{a.ID, a.ID}})
+	require.NoError(t, err)
+	assert.Equal(t, []string{a.ID}, tk.After)
+}
+
+func TestUpdate_rejectsSelfAndCycles(t *testing.T) {
+	b := newTestBoard(t)
+	a, _ := b.Add("a", AddInput{})
+	bb, _ := b.Add("b", AddInput{After: []string{a.ID}})
+	c, _ := b.Add("c", AddInput{After: []string{bb.ID}})
+
+	_, err := b.Update(a.ID, UpdateInput{After: &[]string{a.ID}})
+	assert.ErrorContains(t, err, "itself")
+
+	_, err = b.Update(a.ID, UpdateInput{After: &[]string{c.ID}})
+	assert.ErrorContains(t, err, "cycle")
+
+	got, _ := b.Get(a.ID)
+	assert.Nil(t, got.After, "rejected update must not change the task")
+
+	_, err = b.Update(c.ID, UpdateInput{After: &[]string{}})
+	require.NoError(t, err)
+	got, _ = b.Get(c.ID)
+	assert.Empty(t, got.After)
+}
+
+func TestUpdate_keepsLegacyFreeFormDue(t *testing.T) {
+	b := newTestBoard(t)
+	tk, _ := b.Add("x", AddInput{})
+	b.data.Tasks[0].DueDate = "next friday" // as read from an old file
+
+	_, err := b.Update(tk.ID, UpdateInput{Title: ptr("y")})
+	require.NoError(t, err, "unrelated update must not fail on an old due value")
+	_, err = b.Update(tk.ID, UpdateInput{DueDate: ptr("soon")})
+	assert.Error(t, err)
+}
+
+func TestMove_inProgressSetsStartOnce(t *testing.T) {
+	b := newTestBoard(t)
+	tk, _ := b.Add("x", AddInput{})
+	today := b.clock().In(time.Local).Format(time.DateOnly)
+
+	got, err := b.Move(tk.ID, model.StatusInProgress)
+	require.NoError(t, err)
+	assert.Equal(t, today, got.Start)
+
+	_, err = b.Update(tk.ID, UpdateInput{Start: ptr("2026-01-01")})
+	require.NoError(t, err)
+	_, _ = b.Move(tk.ID, model.StatusTodo)
+	got, _ = b.Move(tk.ID, model.StatusInProgress)
+	assert.Equal(t, "2026-01-01", got.Start)
+
+	other, _ := b.Add("y", AddInput{})
+	got, _ = b.Move(other.ID, model.StatusDone)
+	assert.Empty(t, got.Start)
+}
+
+func TestDelete_removesAfterReferences(t *testing.T) {
+	b := newTestBoard(t)
+	a, _ := b.Add("a", AddInput{})
+	keep, _ := b.Add("keep", AddInput{})
+	c, _ := b.Add("c", AddInput{After: []string{a.ID, keep.ID}})
+	d, _ := b.Add("d", AddInput{After: []string{a.ID}})
+
+	assert.Equal(t, []string{c.ID, d.ID}, b.Dependents(a.ID))
+	_, err := b.Delete(a.ID)
+	require.NoError(t, err)
+
+	got, _ := b.Get(c.ID)
+	assert.Equal(t, []string{keep.ID}, got.After)
+	got, _ = b.Get(d.ID)
+	assert.Nil(t, got.After)
+	assert.Empty(t, b.Dependents(a.ID))
+}
+
+func TestMove_overdueTaskMovesWithoutStart(t *testing.T) {
+	b := newTestBoard(t) // clock: 2026-05-15
+	late, err := b.Add("late", AddInput{DueDate: "2026-05-01"})
+	require.NoError(t, err)
+	got, err := b.Move(late.ID, model.StatusInProgress)
+	require.NoError(t, err, "an overdue task must still move to in-progress")
+	assert.Equal(t, model.StatusInProgress, got.Status)
+	assert.Empty(t, got.Start, "today is after due, so start stays empty")
+
+	today := b.clock().In(time.Local).Format(time.DateOnly)
+	dueToday, _ := b.Add("today", AddInput{DueDate: today})
+	got, err = b.Move(dueToday.ID, model.StatusInProgress)
+	require.NoError(t, err)
+	assert.Equal(t, today, got.Start)
+}
+
+func TestUpdate_unrelatedFieldIgnoresStoredStartAfterDue(t *testing.T) {
+	b := newTestBoard(t)
+	tk, _ := b.Add("x", AddInput{})
+	b.data.Tasks[0].Start, b.data.Tasks[0].DueDate = "2026-06-10", "2026-06-01" // hand-edited file
+
+	_, err := b.Update(tk.ID, UpdateInput{Title: ptr("y")})
+	require.NoError(t, err)
+	_, err = b.Update(tk.ID, UpdateInput{DueDate: ptr("2026-06-02")})
+	assert.ErrorContains(t, err, "after due", "a date the caller sets is still checked")
 }

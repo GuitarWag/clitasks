@@ -16,6 +16,8 @@ var (
 	assigneeRe       = regexp.MustCompile("`assignee:([^`]+)`")
 	tagsRe           = regexp.MustCompile("`tags:([^`]+)`")
 	dueRe            = regexp.MustCompile("`due:([^`]+)`")
+	startRe          = regexp.MustCompile("`start:([^`]+)`")
+	afterRe          = regexp.MustCompile("`after:([^`]+)`")
 	createdUpdatedRe = regexp.MustCompile(`Created:\s*(\S+).*Updated:\s*(\S+)`)
 	createdOnlyRe    = regexp.MustCompile(`Created:\s*(\S+)`)
 	updatedOnlyRe    = regexp.MustCompile(`Updated:\s*(\S+)`)
@@ -133,17 +135,16 @@ func parseMarkdown(data []byte, clock func() time.Time) *model.Board {
 				t.Assignee = mm[1]
 			}
 			if mm := tagsRe.FindStringSubmatch(meta); mm != nil {
-				parts := strings.Split(mm[1], ",")
-				tags := make([]string, 0, len(parts))
-				for _, p := range parts {
-					if v := strings.TrimSpace(p); v != "" {
-						tags = append(tags, v)
-					}
-				}
-				t.Tags = tags
+				t.Tags = splitList(mm[1])
 			}
 			if mm := dueRe.FindStringSubmatch(meta); mm != nil {
 				t.DueDate = mm[1]
+			}
+			if mm := startRe.FindStringSubmatch(meta); mm != nil {
+				t.Start = mm[1]
+			}
+			if mm := afterRe.FindStringSubmatch(meta); mm != nil {
+				t.After = splitList(mm[1])
 			}
 			cur = t
 			continue
@@ -182,4 +183,15 @@ func parseMarkdown(data []byte, clock func() time.Time) *model.Board {
 	}
 	flush()
 	return b
+}
+
+func splitList(s string) []string {
+	parts := strings.Split(s, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if v := strings.TrimSpace(p); v != "" {
+			out = append(out, v)
+		}
+	}
+	return out
 }

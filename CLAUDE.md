@@ -37,3 +37,13 @@ The canonical `SKILL.md` lives at the repo root. `make sync-skill` (and every `m
 
 - **Never add `Co-Authored-By` trailers to commit messages.**
 - Write concise commit messages focused on the "why."
+
+## Decisions (adrlog)
+
+Record design decisions with the `adrlog` CLI. Records go to `docs/adr/`, state to `.adrlog/`.
+
+- Before a change in an area, run `adrlog list --affects '<glob>'` and read the matching records.
+- After a decision that changes behavior, storage format, CLI surface, or a dependency, run `adrlog new "<title>" --status accepted --affects '<glob>' --tags <tag>`, then fill Context / Decision / Consequences in the new file.
+- To replace a decision, pass `--supersedes <id>`. Do not edit the old record's decision.
+- When the stop hook asks about a change that holds no decision, run `adrlog ack --none`.
+- Run `adrlog lint` before you commit a record.

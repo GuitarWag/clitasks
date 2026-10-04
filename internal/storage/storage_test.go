@@ -7,9 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GuitarWag/clitasks/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/GuitarWag/clitasks/internal/model"
 )
 
 func tmpFile(t *testing.T) string {
@@ -317,4 +318,48 @@ func TestPath_returnsConfigured(t *testing.T) {
 
 	s2 := NewMarkdown("")
 	assert.Equal(t, DefaultFile, s2.Path())
+}
+
+func TestRoundtrip_startAndAfter(t *testing.T) {
+	p := tmpFile(t)
+	now, _ := time.Parse(time.RFC3339, "2026-05-15T12:00:00Z")
+	src := &model.Board{
+		Name: "B", CreatedAt: now, UpdatedAt: now,
+		Tasks: []model.Task{
+			{ID: "T-A", Title: "A", Status: model.StatusTodo, Priority: model.PriorityMedium,
+				CreatedAt: now, UpdatedAt: now},
+			{ID: "T-B", Title: "B", Status: model.StatusTodo, Priority: model.PriorityMedium,
+				DueDate: "2026-06-10", Start: "2026-06-01", After: []string{"T-A", "T-C"},
+				CreatedAt: now, UpdatedAt: now},
+		},
+	}
+	s := NewMarkdown(p)
+	require.NoError(t, s.Write(src))
+
+	raw, err := os.ReadFile(p)
+	require.NoError(t, err)
+	assert.Contains(t, string(raw), "`due:2026-06-10` `start:2026-06-01` `after:T-A,T-C`")
+
+	got, err := s.Read()
+	require.NoError(t, err)
+	require.Len(t, got.Tasks, 2)
+	assert.Empty(t, got.Tasks[0].Start)
+	assert.Nil(t, got.Tasks[0].After)
+	assert.Equal(t, "2026-06-01", got.Tasks[1].Start)
+	assert.Equal(t, []string{"T-A", "T-C"}, got.Tasks[1].After)
+	assert.Equal(t, "2026-06-10", got.Tasks[1].DueDate)
+}
+
+func TestRead_startAndAfterInAnyOrder(t *testing.T) {
+	p := tmpFile(t)
+	md := "# Board: B\n\n## TODO\n\n" +
+		"- [ ] [T-B] **B** `after: T-A , ,T-C` `priority:high` `start:2026-06-01`\n"
+	require.NoError(t, os.WriteFile(p, []byte(md), 0o644))
+
+	got, err := NewMarkdown(p).Read()
+	require.NoError(t, err)
+	require.Len(t, got.Tasks, 1)
+	assert.Equal(t, model.PriorityHigh, got.Tasks[0].Priority)
+	assert.Equal(t, "2026-06-01", got.Tasks[0].Start)
+	assert.Equal(t, []string{"T-A", "T-C"}, got.Tasks[0].After)
 }

@@ -6,3 +6,5 @@ dist/
 bin/
 cover.out
 internal/cli/SKILL.md
+.adrlog/*.lock
+.adrlog/journal/

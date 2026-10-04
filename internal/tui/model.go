@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -12,6 +13,7 @@ import (
 	"github.com/GuitarWag/clitasks/internal/board"
 	"github.com/GuitarWag/clitasks/internal/model"
 	"github.com/GuitarWag/clitasks/internal/storage"
+	"github.com/GuitarWag/clitasks/internal/timeline"
 )
 
 type mode int
@@ -54,6 +56,14 @@ type Model struct {
 
 	filterIn textinput.Model
 
+	// showTimeline swaps the board columns for the Gantt view. Modals still
+	// return to modeBoard, which then renders the timeline.
+	showTimeline bool
+	tlRow        int
+	tlFrom       time.Time
+	tlScale      timeline.Scale
+	now          func() time.Time
+
 	keys   keyMap
 	styles styles
 
@@ -70,21 +80,24 @@ func newModel(b *board.Board, filePath string) Model {
 		keys:     defaultKeys(),
 		styles:   newStyles(),
 		filterIn: fi,
+		now:      time.Now,
 	}
 }
 
 func (m Model) Init() tea.Cmd { return nil }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		m.width = msg.Width
-		m.height = msg.Height
+	if ws, ok := msg.(tea.WindowSizeMsg); ok {
+		m.width = ws.Width
+		m.height = ws.Height
 		return m, nil
 	}
 
 	switch m.mode {
 	case modeBoard:
+		if m.showTimeline {
+			return m.updateTimeline(msg)
+		}
 		return m.updateBoard(msg)
 	case modeAdd, modeEdit:
 		return m.updateForm(msg)
@@ -140,6 +153,13 @@ func matchesFilter(t model.Task, q string) bool {
 }
 
 func (m Model) selectedTask() (model.Task, bool) {
+	if m.showTimeline {
+		bars := m.timelineLayout().Bars
+		if m.tlRow < 0 || m.tlRow >= len(bars) {
+			return model.Task{}, false
+		}
+		return bars[m.tlRow].Task, true
+	}
 	tasks := m.tasksInColumn()
 	if m.rowIdx < 0 || m.rowIdx >= len(tasks) {
 		return model.Task{}, false
@@ -148,6 +168,11 @@ func (m Model) selectedTask() (model.Task, bool) {
 }
 
 func (m *Model) clampSelection() {
+	if m.showTimeline {
+		m.tlRow = min(m.tlRow, len(m.timelineLayout().Bars)-1)
+		m.tlRow = max(m.tlRow, 0)
+		return
+	}
 	tasks := m.tasksInColumn()
 	if m.rowIdx >= len(tasks) {
 		m.rowIdx = len(tasks) - 1
@@ -213,6 +238,9 @@ func (m Model) updateBoard(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.clampSelection()
 			m.flash = "reloaded"
 		}
+	case key.Matches(km, m.keys.Timeline):
+		m.showTimeline = true
+		m.tlRow, m.tlFrom, m.tlScale = 0, time.Time{}, 0
 	case key.Matches(km, m.keys.Help):
 		m.mode = modeHelp
 	case key.Matches(km, m.keys.Esc):
@@ -239,34 +267,39 @@ func (m Model) View() string {
 	case modeHelp:
 		return m.viewHelp()
 	}
+	if m.showTimeline {
+		return m.viewTimeline()
+	}
 	return m.viewBoard()
 }
 
 func (m Model) viewBoard() string {
-	info := m.board.Info()
 	var b strings.Builder
+	m.writeHeader(&b)
+	cols := m.renderColumns()
+	b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, cols...))
+	b.WriteString("\n")
+	b.WriteString(m.styles.footer.Render("←/h →/l move column · ↑/k ↓/j move task · a add · e edit · d delete · s status · f filter · t timeline · r refresh · ? help · q quit"))
+	return b.String()
+}
 
-	fmt.Fprintf(&b, "%s — %d tasks — %s\n",
+func (m Model) writeHeader(b *strings.Builder) {
+	info := m.board.Info()
+	fmt.Fprintf(b, "%s — %d tasks — %s\n",
 		m.styles.header.Render(info.Name), len(info.Tasks),
 		m.styles.headerDim.Render(m.filePath))
 	if info.Description != "" {
-		fmt.Fprintln(&b, m.styles.headerDim.Render(info.Description))
+		fmt.Fprintln(b, m.styles.headerDim.Render(info.Description))
 	}
 	filterLine := "filter: (none — press f)"
 	if m.filter != "" {
 		filterLine = "filter: " + m.filter + " (esc to clear)"
 	}
-	fmt.Fprintln(&b, m.styles.headerDim.Render(filterLine))
+	fmt.Fprintln(b, m.styles.headerDim.Render(filterLine))
 	if m.flash != "" {
-		fmt.Fprintln(&b, m.styles.headerDim.Render(m.flash))
+		fmt.Fprintln(b, m.styles.headerDim.Render(m.flash))
 	}
 	b.WriteString("\n")
-
-	cols := m.renderColumns()
-	b.WriteString(lipgloss.JoinHorizontal(lipgloss.Top, cols...))
-	b.WriteString("\n")
-	b.WriteString(m.styles.footer.Render("←/h →/l move column · ↑/k ↓/j move task · a add · e edit · d delete · s status · f filter · r refresh · ? help · q quit"))
-	return b.String()
 }
 
 func (m Model) renderColumns() []string {
@@ -351,4 +384,3 @@ func (m Model) renderTaskLine(b *strings.Builder, t model.Task, selected bool) {
 		fmt.Fprintf(b, "    %s\n", m.styles.taskDim.Render(desc))
 	}
 }
-

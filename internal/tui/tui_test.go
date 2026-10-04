@@ -2,6 +2,7 @@ package tui
 
 import (
 	"math/rand/v2"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -116,7 +117,7 @@ func TestAdd_modalFlow(t *testing.T) {
 
 	m.form.fields[fieldTitle].input.SetValue("via tui")
 	m.form.fields[fieldPriority].input.SetValue("high")
-	for i := 0; i < 5; i++ {
+	for range m.form.fields {
 		m = send(m, k("enter"))
 	}
 
@@ -131,7 +132,7 @@ func TestAdd_requiresTitle(t *testing.T) {
 	b, p := setupBoard(t)
 	m := newModel(b, p)
 	m = send(m, k("a"))
-	for i := 0; i < 5; i++ {
+	for range m.form.fields {
 		m = send(m, k("enter"))
 	}
 	assert.Equal(t, modeAdd, m.mode, "form stays open on validation error")
@@ -149,7 +150,7 @@ func TestEdit_modalPrefilled(t *testing.T) {
 	assert.Equal(t, "medium", m.form.fields[fieldPriority].input.Value())
 
 	m.form.fields[fieldTitle].input.SetValue("renamed")
-	for i := 0; i < 5; i++ {
+	for range m.form.fields {
 		m = send(m, k("enter"))
 	}
 	got, _ := b.Get(tk.ID)
@@ -305,9 +306,148 @@ func TestSubmitForm_invalidPriority(t *testing.T) {
 	m = send(m, k("a"))
 	m.form.fields[fieldTitle].input.SetValue("x")
 	m.form.fields[fieldPriority].input.SetValue("bogus")
-	for i := 0; i < 5; i++ {
+	for range m.form.fields {
 		m = send(m, k("enter"))
 	}
 	assert.Equal(t, modeAdd, m.mode)
 	assert.Contains(t, strings.ToLower(m.form.err), "invalid priority")
+}
+
+func timelineModel(t *testing.T) (Model, *board.Board, []model.Task) {
+	t.Helper()
+	b, p := setupBoard(t)
+	a, err := b.Add("design", board.AddInput{Start: "2026-06-01", DueDate: "2026-06-05"})
+	require.NoError(t, err)
+	c, err := b.Add("build", board.AddInput{Start: "2026-06-08", DueDate: "2026-06-12"})
+	require.NoError(t, err)
+	m := newModel(b, p)
+	m.now = func() time.Time { return time.Date(2026, 6, 15, 12, 0, 0, 0, time.Local) }
+	m.width = 80
+	return m, b, []model.Task{a, c}
+}
+
+func TestTimeline_toggleAndView(t *testing.T) {
+	m, _, tasks := timelineModel(t)
+	m = send(m, k("t"))
+	require.True(t, m.showTimeline)
+
+	out := m.View()
+	assert.Contains(t, out, tasks[0].ID+" design")
+	assert.Contains(t, out, "█████")
+	assert.Contains(t, out, "1 column = 1 day")
+	assert.Contains(t, out, "t/esc board")
+
+	m = send(m, k("t"))
+	assert.False(t, m.showTimeline)
+	assert.Contains(t, m.View(), "TODO (2)")
+
+	m = send(m, k("t"))
+	m = send(m, k("esc"))
+	assert.False(t, m.showTimeline, "esc also goes back")
+}
+
+func TestTimeline_selectionDrivesActions(t *testing.T) {
+	m, b, tasks := timelineModel(t)
+	m = send(m, k("t"))
+	m = send(m, k("j"))
+	sel, ok := m.selectedTask()
+	require.True(t, ok)
+	assert.Equal(t, tasks[1].ID, sel.ID)
+
+	m = send(m, k("j"))
+	assert.Equal(t, 1, m.tlRow, "selection stops at the last row")
+
+	// Edit from the timeline and return to it.
+	m = send(m, k("e"))
+	require.Equal(t, modeEdit, m.mode)
+	assert.Equal(t, "2026-06-08", m.form.fields[fieldStart].input.Value())
+	m.form.fields[fieldStart].input.SetValue("2026-06-09")
+	for range m.form.fields {
+		m = send(m, k("enter"))
+	}
+	assert.Equal(t, modeBoard, m.mode)
+	assert.True(t, m.showTimeline)
+	got, _ := b.Get(tasks[1].ID)
+	assert.Equal(t, "2026-06-09", got.Start)
+
+	// Delete from the timeline clamps the selection.
+	m = send(m, k("d"))
+	m = send(m, k("y"))
+	assert.Equal(t, 0, m.tlRow)
+	assert.Len(t, b.List(board.Filter{}), 1)
+}
+
+func TestTimeline_scrollKeepsScale(t *testing.T) {
+	m, _, _ := timelineModel(t)
+	m = send(m, k("t"))
+	first := m.timelineASCII(m.timelineLayout())
+	m = send(m, k("l"))
+	assert.Equal(t, first.Scale, m.tlScale)
+	assert.Equal(t, first.From.AddDate(0, 0, 7), m.tlFrom)
+	m = send(m, k("h"))
+	m = send(m, k("h"))
+	assert.Equal(t, first.From.AddDate(0, 0, -7), m.tlFrom)
+}
+
+func TestTimeline_resizeLimitsRows(t *testing.T) {
+	m, b, _ := timelineModel(t)
+	for range 10 {
+		_, err := b.Add("more", board.AddInput{Start: "2026-06-02", DueDate: "2026-06-03"})
+		require.NoError(t, err)
+	}
+	m = send(m, k("t"))
+	mm, _ := m.Update(tea.WindowSizeMsg{Width: 80, Height: timelineChrome + 3})
+	m = mm.(Model)
+	for range 11 {
+		m = send(m, k("j"))
+	}
+	assert.Contains(t, m.View(), "rows 10-12 of 12")
+}
+
+func TestForm_rejectsBadDate(t *testing.T) {
+	b, p := setupBoard(t)
+	m := newModel(b, p)
+	m = send(m, k("a"))
+	m.form.fields[fieldTitle].input.SetValue("x")
+	m.form.fields[fieldDue].input.SetValue("tomorrow")
+	for range m.form.fields {
+		m = send(m, k("enter"))
+	}
+	assert.Equal(t, modeAdd, m.mode)
+	assert.Contains(t, m.form.err, "YYYY-MM-DD")
+}
+
+func TestForm_editKeepsLegacyDue(t *testing.T) {
+	_, p := setupBoard(t)
+	require.NoError(t, storage.NewMarkdown(p).Write(&model.Board{Name: "B", Tasks: []model.Task{
+		{ID: "T-OLD-001", Title: "old", Status: model.StatusTodo, Priority: model.PriorityLow, DueDate: "next friday"},
+	}}))
+	b, err := board.Open(storage.NewMarkdown(p))
+	require.NoError(t, err)
+	m := newModel(b, p)
+	m = send(m, k("e"))
+	m.form.fields[fieldTitle].input.SetValue("renamed")
+	for range m.form.fields {
+		m = send(m, k("enter"))
+	}
+	assert.Empty(t, m.form.err)
+	got, _ := b.Get("T-OLD-001")
+	assert.Equal(t, "renamed", got.Title)
+	assert.Equal(t, "next friday", got.DueDate)
+}
+
+func TestStatusMenu_showsMoveError(t *testing.T) {
+	b, p := setupBoard(t)
+	_, err := b.Add("x", board.AddInput{})
+	require.NoError(t, err)
+	m := newModel(b, p)
+
+	dir := filepath.Dir(p)
+	require.NoError(t, os.Chmod(dir, 0o500)) // the atomic write cannot create its temp file
+	t.Cleanup(func() { _ = os.Chmod(dir, 0o700) })
+
+	m = send(m, k("s"))
+	m = send(m, k("j"))
+	m = send(m, k("enter"))
+	assert.True(t, strings.HasPrefix(m.flash, "✗ "), "flash was %q", m.flash)
 }

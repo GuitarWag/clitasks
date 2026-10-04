@@ -60,8 +60,9 @@ tasks -f myboard.md tui
 
 ### View & Search
 - **f** - Filter/search tasks across all columns
+- **t** - Switch between the board and the timeline (Gantt) view
 - **r** - Refresh board from file
-- **h** or **?** - Show help screen
+- **?** - Show help screen
 
 ### General
 - **q** or **Ctrl+C** - Quit application
@@ -98,6 +99,8 @@ Opens a dialog with fields for:
 - **Priority** - low, medium, high, or critical
 - **Assignee** - Person responsible
 - **Tags** - Comma-separated tags
+- **Due** - Due date, YYYY-MM-DD
+- **Start** - Start date, YYYY-MM-DD
 
 Use Tab/Shift+Tab to move between fields. Press Enter on "Save" or use the button.
 
@@ -154,6 +157,17 @@ Just:
 1. Press 's'
 2. Select new status
 3. Done!
+
+### 9. Timeline View (Press 't')
+
+Shows the tasks as a Gantt chart. The view uses the same filter as the board.
+
+- **↑/k** and **↓/j** select a row
+- **←/h** and **→/l** scroll the chart one week
+- **e**, **s**, **d** act on the selected row
+- **t** or **Esc** go back to the board
+
+Bar rules are the same as `tasks timeline`. See the README. The view shows the number of `after` conflicts and unscheduled tasks under the chart. Run `tasks timeline` to list them.
 
 ## Color Coding
 
@@ -347,7 +361,7 @@ TODO (1)          IN PROGRESS (1)    DONE (0)         BLOCKED (0)
 
 Potential additions:
 - Drag & drop tasks between columns
-- Task dependencies visualization
+- Dependency arrows in the timeline view
 - Time tracking integration
 - Customizable color schemes
 - Mouse support

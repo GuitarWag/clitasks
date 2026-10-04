@@ -55,6 +55,12 @@ func writeTask(w io.Writer, t model.Task, checkbox string) {
 	if t.DueDate != "" {
 		meta = append(meta, fmt.Sprintf("`due:%s`", t.DueDate))
 	}
+	if t.Start != "" {
+		meta = append(meta, fmt.Sprintf("`start:%s`", t.Start))
+	}
+	if len(t.After) > 0 {
+		meta = append(meta, fmt.Sprintf("`after:%s`", strings.Join(t.After, ",")))
+	}
 	fmt.Fprintf(w, "- %s [%s] **%s** %s\n", checkbox, t.ID, t.Title, strings.Join(meta, " "))
 	if t.Description != "" {
 		fmt.Fprintf(w, "  > %s\n", t.Description)
