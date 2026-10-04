@@ -50,3 +50,14 @@ func TestPriorityValid(t *testing.T) {
 	assert.False(t, TaskPriority("").Valid())
 	assert.False(t, TaskPriority("urgent").Valid())
 }
+
+func TestParseDate(t *testing.T) {
+	got, err := ParseDate("2026-06-01")
+	require.NoError(t, err)
+	assert.Equal(t, "2026-06-01", got.Format("2006-01-02"))
+
+	for _, s := range []string{"", "next friday", "2026-6-1", "2026-02-30", "2026-06-01T10:00:00Z"} {
+		_, err := ParseDate(s)
+		assert.Error(t, err, s)
+	}
+}
