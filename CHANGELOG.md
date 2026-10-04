@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - `--due` and `--start` accept only `YYYY-MM-DD`. Old boards with other due values still load, and those tasks show as unscheduled in the timeline.
-- A move to in-progress sets the start date to today if it is empty.
+- A move to in-progress sets the start date to today if it is empty and the task is not overdue.
 - `delete` removes the deleted ID from the `after` list of other tasks.
 
 ## [2.1.0] - 2026-02-01

@@ -40,7 +40,8 @@ Rules:
 - `--start` and `--due` accept only `YYYY-MM-DD`. The CLI rejects other values.
   The parser still reads a non-date `due:` from older files and keeps it.
 - `tasks start <id>`, and every other move to in-progress, sets `Start` to today
-  (local date) if `Start` is empty.
+  (local date) if `Start` is empty. An overdue task keeps an empty `Start`,
+  because today is after its due date.
 - `After` holds IDs of tasks on the same board. `Add` and `Update` reject an
   unknown ID, a self reference and a cycle.
 - `Delete` removes the deleted ID from the `After` list of every other task.

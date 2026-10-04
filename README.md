@@ -117,7 +117,7 @@ Options:
 - `--start <date>`: Start date (YYYY-MM-DD). It must not be after the due date.
 - `--after <ids>`: Comma-separated IDs of tasks that this task waits for. The CLI rejects unknown IDs and cycles.
 
-`tasks start` (and any move to in-progress) sets the start date to today if the task has no start date. `tasks delete` removes the deleted ID from the `after` list of other tasks.
+`tasks start` (and any move to in-progress) sets the start date to today if the task has no start date and is not overdue. `tasks delete` removes the deleted ID from the `after` list of other tasks.
 
 ### View Tasks
 

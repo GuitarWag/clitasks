@@ -63,7 +63,7 @@ tasks block <task-id>        # Move to blocked
 tasks move <task-id> todo    # Move to any status
 ```
 
-A move to in-progress sets the start date to today if the task has no start date.
+A move to in-progress sets the start date to today if the task has no start date and is not overdue.
 
 ### Delete
 
