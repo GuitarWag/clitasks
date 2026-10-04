@@ -7,9 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GuitarWag/clitasks/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/GuitarWag/clitasks/internal/model"
 )
 
 func sampleBoard() model.Board {

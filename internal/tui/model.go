@@ -76,10 +76,9 @@ func newModel(b *board.Board, filePath string) Model {
 func (m Model) Init() tea.Cmd { return nil }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		m.width = msg.Width
-		m.height = msg.Height
+	if ws, ok := msg.(tea.WindowSizeMsg); ok {
+		m.width = ws.Width
+		m.height = ws.Height
 		return m, nil
 	}
 
@@ -351,4 +350,3 @@ func (m Model) renderTaskLine(b *strings.Builder, t model.Task, selected bool) {
 		fmt.Fprintf(b, "    %s\n", m.styles.taskDim.Render(desc))
 	}
 }
-

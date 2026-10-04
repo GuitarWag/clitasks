@@ -66,8 +66,8 @@ type Filter struct {
 	Tags     []string
 }
 
-func (b *Board) Path() string       { return b.store.Path() }
-func (b *Board) Info() model.Board  { return *b.data }
+func (b *Board) Path() string      { return b.store.Path() }
+func (b *Board) Info() model.Board { return *b.data }
 
 func (b *Board) Add(title string, in AddInput) (model.Task, error) {
 	now := b.clock().UTC()

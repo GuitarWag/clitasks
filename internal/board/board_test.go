@@ -6,10 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GuitarWag/clitasks/internal/model"
-	"github.com/GuitarWag/clitasks/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/GuitarWag/clitasks/internal/model"
+	"github.com/GuitarWag/clitasks/internal/storage"
 )
 
 func newTestBoard(t *testing.T) *Board {
