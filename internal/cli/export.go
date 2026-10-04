@@ -35,7 +35,7 @@ func newExportCmd() *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&format, "format", "json", "Export format (json|csv|summary)")
+	cmd.Flags().StringVar(&format, "format", "json", "Export format (json|csv|summary|gantt)")
 	cmd.Flags().StringVarP(&output, "output", "o", "", "Output file (defaults to stdout)")
 	return cmd
 }
