@@ -4,6 +4,8 @@
 
 | Record | Status | Date | Tags |
 |---|---|---|---|
+| [Compute one timeline layout for CLI, TUI and Mermaid](20261004-132518-compute-one-timeline-layout-for-cli.md) | proposed | 2026-10-04 | timeline, architecture |
+| [Add start and after fields to the task line](20261004-132518-add-start-and-after-fields-to.md) | proposed | 2026-10-04 | storage, timeline |
 | [Write the board file atomically without a directory fsync](20261004-131735-write-the-board-file-atomically-without.md) | accepted | 2026-05-17 | storage, durability |
 | [Write exports with mode 0600](20261004-131735-write-exports-with-mode-0600.md) | accepted | 2026-05-17 | security |
 | [Store the board in one Markdown file](20261004-131735-store-the-board-in-one-markdown.md) | accepted | 2026-05-16 | storage |
@@ -16,18 +18,22 @@
 
 ```mermaid
 graph TD
-  n0["Write the board file atomically without a directory fsync"]
-  n1["Write exports with mode 0600"]
-  n2["Store the board in one Markdown file"]
-  n3["Resolve the board file from flag, then env var, then tasks.…"]
-  n4["Generate task IDs from a base36 timestamp and a random suff…"]
-  n5["Embed SKILL.md from a canonical root copy"]
-  n6["Port clitasks from TypeScript to Go"]
-  n0 --> n2
-  n0 --> n6
-  n1 --> n6
-  n2 --> n6
-  n3 --> n6
-  n4 --> n6
-  n5 --> n6
+  n0["Compute one timeline layout for CLI, TUI and Mermaid"]
+  n1["Add start and after fields to the task line"]
+  n2["Write the board file atomically without a directory fsync"]
+  n3["Write exports with mode 0600"]
+  n4["Store the board in one Markdown file"]
+  n5["Resolve the board file from flag, then env var, then tasks.…"]
+  n6["Generate task IDs from a base36 timestamp and a random suff…"]
+  n7["Embed SKILL.md from a canonical root copy"]
+  n8["Port clitasks from TypeScript to Go"]
+  n0 --> n1
+  n1 --> n4
+  n2 --> n4
+  n2 --> n8
+  n3 --> n8
+  n4 --> n8
+  n5 --> n8
+  n6 --> n8
+  n7 --> n8
 ```
