@@ -56,3 +56,17 @@ func PriorityColor(p model.TaskPriority) lipgloss.Color {
 func PriorityStyle(p model.TaskPriority) lipgloss.Style {
 	return lipgloss.NewStyle().Foreground(PriorityColor(p))
 }
+
+// StatusStyle colors a timeline row by task status.
+func StatusStyle(s model.TaskStatus) lipgloss.Style {
+	switch s {
+	case model.StatusInProgress:
+		return Blue
+	case model.StatusDone:
+		return Green
+	case model.StatusBlocked:
+		return Red
+	default:
+		return lipgloss.NewStyle()
+	}
+}

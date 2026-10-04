@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -371,4 +372,41 @@ func TestDelete_reportsRemovedAfterRefs(t *testing.T) {
 	out, err := runCmd(t, "delete", a)
 	require.NoError(t, err)
 	assert.Contains(t, out, "Removed from after: "+b)
+}
+
+func TestTimeline(t *testing.T) {
+	withBoardFile(t)
+	old := timelineNow
+	timelineNow = func() time.Time { return time.Date(2026, 6, 15, 12, 0, 0, 0, time.Local) }
+	t.Cleanup(func() { timelineNow = old })
+
+	out, _ := runCmd(t, "add", "design", "--start", "2026-06-01", "--due", "2026-06-10")
+	a := idRe.FindString(out)
+	out, _ = runCmd(t, "add", "build", "--start", "2026-06-05", "--due", "2026-06-12", "--after", a)
+	b := idRe.FindString(out)
+
+	out, err := runCmd(t, "timeline", "--width", "60")
+	require.NoError(t, err)
+	lines := strings.Split(out, "\n")
+	require.GreaterOrEqual(t, len(lines), 3)
+	assert.Contains(t, lines[1], a)
+	assert.Contains(t, lines[1], "██████████")
+	assert.Contains(t, lines[2], b)
+	assert.Contains(t, out, "1 column = 1 day")
+	assert.Contains(t, out, b+" starts 2026-06-05, before "+a+" ends 2026-06-10")
+
+	out, err = runCmd(t, "timeline", "--status", "done")
+	require.NoError(t, err)
+	assert.Contains(t, out, "No tasks found")
+}
+
+func TestTimeline_listsUnscheduled(t *testing.T) {
+	p := withBoardFile(t)
+	md := "# Board: B\n\n## TODO\n\n- [ ] [T-OLD-001] **old** `priority:low` `due:next friday`\n"
+	require.NoError(t, os.WriteFile(p, []byte(md), 0o644))
+
+	out, err := runCmd(t, "timeline")
+	require.NoError(t, err)
+	assert.Contains(t, out, "Unscheduled")
+	assert.Contains(t, out, "T-OLD-001 old due:next friday")
 }

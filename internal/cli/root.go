@@ -30,7 +30,7 @@ func newRootCmd(version string) *cobra.Command {
 		newInitCmd(), newAddCmd(), newListCmd(), newBoardCmd(), newShowCmd(),
 		newUpdateCmd(), newMoveCmd(), newStartCmd(), newCompleteCmd(),
 		newBlockCmd(), newDeleteCmd(), newInfoCmd(), newStatsCmd(),
-		newExportCmd(), newTuiCmd(), newClaudeCmd(), newCodexCmd(),
+		newExportCmd(), newTimelineCmd(), newTuiCmd(), newClaudeCmd(), newCodexCmd(),
 	)
 	return root
 }
