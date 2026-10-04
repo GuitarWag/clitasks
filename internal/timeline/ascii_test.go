@@ -64,3 +64,13 @@ func TestRenderASCII_empty(t *testing.T) {
 	assert.Empty(t, out.Rows)
 	assert.Equal(t, date("2026-06-15"), out.From)
 }
+
+// The TUI passes a UTC-midnight date as From. West of UTC that must not
+// become the previous day (run with TZ=America/New_York).
+func TestRenderASCII_fromIsUsedAsADate(t *testing.T) {
+	l := dayScaleLayout()
+	out := RenderASCII(l, ASCIIOptions{Width: 50, Today: today, Scale: ScaleWeek, From: date("2026-06-08")})
+	assert.Equal(t, date("2026-06-08"), out.From)
+	out = RenderASCII(l, ASCIIOptions{Width: 50, Today: today, Scale: ScaleDay, From: date("2026-06-03")})
+	assert.Equal(t, date("2026-06-03"), out.From)
+}

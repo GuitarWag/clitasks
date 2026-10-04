@@ -27,7 +27,7 @@ const (
 )
 
 // ASCIIOptions controls RenderASCII. From moves the left edge of the chart,
-// for scrolling. Zero From starts at the layout's first day. Zero Scale picks
+// for scrolling; RenderASCII uses its calendar date in its own location. Zero From starts at the layout's first day. Zero Scale picks
 // the scale from the range; a scrolling caller passes the first result's
 // Scale so the scale does not change as the edge moves.
 type ASCIIOptions struct {
@@ -62,7 +62,9 @@ func RenderASCII(l Layout, o ASCIIOptions) ASCII {
 		from, to = today, today
 	}
 	if !o.From.IsZero() {
-		from = Day(o.From)
+		// From is already a date. Day() would shift it a day west of UTC.
+		y, m, d := o.From.Date()
+		from = time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
 	}
 	scale := o.Scale
 	if scale == 0 {
