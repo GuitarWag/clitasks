@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/x/term"
@@ -89,7 +90,7 @@ func renderTimeline(w io.Writer, l timeline.Layout, width int, now time.Time) {
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, styleDim.Render("Unscheduled (due or start is not YYYY-MM-DD):"))
 		for _, t := range l.Unscheduled {
-			fmt.Fprintf(w, "  %s %s %s\n", styleCyan.Render(t.ID), t.Title, styleDim.Render("due:"+t.DueDate))
+			fmt.Fprintf(w, "  %s %s %s\n", styleCyan.Render(t.ID), t.Title, styleDim.Render(badDates(t)))
 		}
 	}
 }
@@ -101,4 +102,16 @@ func terminalWidth(w io.Writer) int {
 		}
 	}
 	return defaultTimelineWidth
+}
+
+// badDates names the date fields that keep t off the chart.
+func badDates(t model.Task) string {
+	var bad []string
+	if _, err := model.ParseDate(t.DueDate); t.DueDate != "" && err != nil {
+		bad = append(bad, "due:"+t.DueDate)
+	}
+	if _, err := model.ParseDate(t.Start); t.Start != "" && err != nil {
+		bad = append(bad, "start:"+t.Start)
+	}
+	return strings.Join(bad, " ")
 }

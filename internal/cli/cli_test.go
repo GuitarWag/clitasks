@@ -410,3 +410,14 @@ func TestTimeline_listsUnscheduled(t *testing.T) {
 	assert.Contains(t, out, "Unscheduled")
 	assert.Contains(t, out, "T-OLD-001 old due:next friday")
 }
+
+func TestTimeline_unscheduledNamesTheBadField(t *testing.T) {
+	p := withBoardFile(t)
+	md := "# Board: B\n\n## TODO\n\n- [ ] [T-OLD-002] **bad start** `priority:low` `start:next-week`\n"
+	require.NoError(t, os.WriteFile(p, []byte(md), 0o644))
+
+	out, err := runCmd(t, "timeline")
+	require.NoError(t, err)
+	assert.Contains(t, out, "T-OLD-002 bad start start:next-week")
+	assert.NotContains(t, out, "due:")
+}
