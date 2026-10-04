@@ -139,7 +139,11 @@ func (b *Board) Update(id string, in UpdateInput) (model.Task, error) {
 	}
 	if in.Status != nil {
 		if *in.Status == model.StatusInProgress && t.Start == "" {
-			t.Start = now.In(time.Local).Format(time.DateOnly)
+			today := now.In(time.Local).Format(time.DateOnly)
+			// An overdue task keeps an empty start: today would be after due.
+			if due, err := model.ParseDate(t.DueDate); err != nil || !due.Before(mustDate(today)) {
+				t.Start = today
+			}
 		}
 		t.Status = *in.Status
 	}
@@ -251,8 +255,9 @@ func (b *Board) Dependents(id string) []string {
 	return out
 }
 
-// validate checks the date fields that the caller set, start <= due when both
-// are dates, and the After links when the caller set them.
+// validate checks the date fields that the caller set, start <= due when the
+// caller set one of them and both are dates, and the After links when the
+// caller set them.
 func (b *Board) validate(t model.Task, checkDue, checkStart, checkAfter bool) error {
 	var due, start time.Time
 	var dueOK, startOK bool
@@ -270,7 +275,7 @@ func (b *Board) validate(t model.Task, checkDue, checkStart, checkAfter bool) er
 		}
 		start, startOK = s, err == nil
 	}
-	if dueOK && startOK && start.After(due) {
+	if (checkDue || checkStart) && dueOK && startOK && start.After(due) {
 		return fmt.Errorf("start %s is after due %s", t.Start, t.DueDate)
 	}
 	if !checkAfter {
@@ -309,6 +314,11 @@ func (b *Board) reaches(from, target string, seen map[string]bool) bool {
 		}
 	}
 	return false
+}
+
+func mustDate(s string) time.Time {
+	d, _ := model.ParseDate(s)
+	return d
 }
 
 func dedupe(ids []string) []string {

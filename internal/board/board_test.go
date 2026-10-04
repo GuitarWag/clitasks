@@ -265,3 +265,30 @@ func TestDelete_removesAfterReferences(t *testing.T) {
 	assert.Nil(t, got.After)
 	assert.Empty(t, b.Dependents(a.ID))
 }
+
+func TestMove_overdueTaskMovesWithoutStart(t *testing.T) {
+	b := newTestBoard(t) // clock: 2026-05-15
+	late, err := b.Add("late", AddInput{DueDate: "2026-05-01"})
+	require.NoError(t, err)
+	got, err := b.Move(late.ID, model.StatusInProgress)
+	require.NoError(t, err, "an overdue task must still move to in-progress")
+	assert.Equal(t, model.StatusInProgress, got.Status)
+	assert.Empty(t, got.Start, "today is after due, so start stays empty")
+
+	today := b.clock().In(time.Local).Format(time.DateOnly)
+	dueToday, _ := b.Add("today", AddInput{DueDate: today})
+	got, err = b.Move(dueToday.ID, model.StatusInProgress)
+	require.NoError(t, err)
+	assert.Equal(t, today, got.Start)
+}
+
+func TestUpdate_unrelatedFieldIgnoresStoredStartAfterDue(t *testing.T) {
+	b := newTestBoard(t)
+	tk, _ := b.Add("x", AddInput{})
+	b.data.Tasks[0].Start, b.data.Tasks[0].DueDate = "2026-06-10", "2026-06-01" // hand-edited file
+
+	_, err := b.Update(tk.ID, UpdateInput{Title: ptr("y")})
+	require.NoError(t, err)
+	_, err = b.Update(tk.ID, UpdateInput{DueDate: ptr("2026-06-02")})
+	assert.ErrorContains(t, err, "after due", "a date the caller sets is still checked")
+}

@@ -2,6 +2,7 @@ package tui
 
 import (
 	"math/rand/v2"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -433,4 +434,20 @@ func TestForm_editKeepsLegacyDue(t *testing.T) {
 	got, _ := b.Get("T-OLD-001")
 	assert.Equal(t, "renamed", got.Title)
 	assert.Equal(t, "next friday", got.DueDate)
+}
+
+func TestStatusMenu_showsMoveError(t *testing.T) {
+	b, p := setupBoard(t)
+	_, err := b.Add("x", board.AddInput{})
+	require.NoError(t, err)
+	m := newModel(b, p)
+
+	dir := filepath.Dir(p)
+	require.NoError(t, os.Chmod(dir, 0o500)) // the atomic write cannot create its temp file
+	t.Cleanup(func() { _ = os.Chmod(dir, 0o700) })
+
+	m = send(m, k("s"))
+	m = send(m, k("j"))
+	m = send(m, k("enter"))
+	assert.True(t, strings.HasPrefix(m.flash, "✗ "), "flash was %q", m.flash)
 }

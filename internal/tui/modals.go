@@ -249,7 +249,9 @@ func (m Model) updateStatusMenu(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case "enter":
 		if t, ok := m.selectedTask(); ok {
-			if _, err := m.board.Move(t.ID, columnOrder[m.statusSel]); err == nil {
+			if _, err := m.board.Move(t.ID, columnOrder[m.statusSel]); err != nil {
+				m.flash = "✗ " + err.Error()
+			} else {
 				m.flash = "moved " + t.ID + " → " + string(columnOrder[m.statusSel])
 			}
 			m.clampSelection()
