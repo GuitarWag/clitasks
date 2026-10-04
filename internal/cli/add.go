@@ -10,7 +10,7 @@ import (
 )
 
 func newAddCmd() *cobra.Command {
-	var desc, priority, assignee, tags, due string
+	var desc, priority, assignee, tags, due, start, after string
 	cmd := &cobra.Command{
 		Use:   "add <title>",
 		Short: "Add a new task",
@@ -30,6 +30,8 @@ func newAddCmd() *cobra.Command {
 				Assignee:    assignee,
 				Tags:        splitTags(tags),
 				DueDate:     due,
+				Start:       start,
+				After:       splitTags(after),
 			})
 			if err != nil {
 				return err
@@ -44,5 +46,7 @@ func newAddCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&assignee, "assignee", "a", "", "Assignee name")
 	cmd.Flags().StringVarP(&tags, "tags", "t", "", "Comma-separated tags")
 	cmd.Flags().StringVar(&due, "due", "", "Due date (YYYY-MM-DD)")
+	cmd.Flags().StringVar(&start, "start", "", "Start date (YYYY-MM-DD)")
+	cmd.Flags().StringVar(&after, "after", "", "Comma-separated IDs of tasks this one waits for")
 	return cmd
 }

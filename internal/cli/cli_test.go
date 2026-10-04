@@ -333,3 +333,42 @@ func TestSkillInstall_global(t *testing.T) {
 	_, err = os.Stat(filepath.Join(home, ".claude", "skills", "tasks-cli", "SKILL.md"))
 	require.NoError(t, err)
 }
+
+func TestAddUpdate_startAndAfter(t *testing.T) {
+	p := withBoardFile(t)
+	out, err := runCmd(t, "add", "first")
+	require.NoError(t, err)
+	first := idRe.FindString(out)
+
+	out, err = runCmd(t, "add", "second", "--start", "2026-06-01", "--due", "2026-06-05", "--after", first)
+	require.NoError(t, err)
+	second := idRe.FindString(out)
+	assert.Contains(t, out, "Start: 2026-06-01")
+	assert.Contains(t, out, "After: "+first)
+
+	data, _ := os.ReadFile(p)
+	assert.Contains(t, string(data), "`start:2026-06-01` `after:"+first+"`")
+
+	_, err = runCmd(t, "update", second, "--after", "")
+	require.NoError(t, err)
+	data, _ = os.ReadFile(p)
+	assert.NotContains(t, string(data), "`after:")
+}
+
+func TestAdd_rejectsBadDue(t *testing.T) {
+	withBoardFile(t)
+	_, err := runCmd(t, "add", "x", "--due", "next friday")
+	assert.ErrorContains(t, err, "YYYY-MM-DD")
+}
+
+func TestDelete_reportsRemovedAfterRefs(t *testing.T) {
+	withBoardFile(t)
+	out, _ := runCmd(t, "add", "a")
+	a := idRe.FindString(out)
+	out, _ = runCmd(t, "add", "b", "--after", a)
+	b := idRe.FindString(out)
+
+	out, err := runCmd(t, "delete", a)
+	require.NoError(t, err)
+	assert.Contains(t, out, "Removed from after: "+b)
+}
