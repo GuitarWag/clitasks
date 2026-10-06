@@ -206,3 +206,19 @@ func Mark(s string, terms []string, base, mark lipgloss.Style) string {
 	}
 	return b.String()
 }
+
+// Height is the number of lines Card renders for t, without rendering it.
+func Height(t model.Task, o Opts) int {
+	if o.Compact {
+		return 1
+	}
+	inner := max(o.Width-3, 4)
+	h := min(strings.Count(ansi.Wordwrap(t.Title, inner, " -"), "\n")+1, 2) + 1
+	if len(t.Tags) > 0 {
+		h++
+	}
+	if o.ShowID {
+		h++
+	}
+	return h
+}

@@ -112,7 +112,6 @@ func (m Model) geometry(w, h int) boardGeom {
 	start := max(0, min(m.col-(n-1), len(columnOrder)-n))
 	cw := (g.boardW - colGap*(n-1)) / n
 	g.colH = g.boardH
-	conflicts := m.conflicts()
 	for i := 0; i < n; i++ {
 		ci := start + i
 		cg := colGeom{index: ci, x: 1 + i*(cw+colGap), w: cw}
@@ -121,7 +120,7 @@ func (m Model) geometry(w, h int) boardGeom {
 		y := 3 // header, rule, and a gap line that shows the ↑ marker
 		for j := cg.above; j < len(tasks); j++ {
 			t := tasks[j]
-			hgt := lipgloss.Height(card.Card(t, m.ctx(), m.cardOpts(t, cw, false, g.compact, conflicts)))
+			hgt := card.Height(t, card.Opts{Width: cw, Compact: g.compact})
 			reserve := 0
 			if j < len(tasks)-1 {
 				reserve = 1 // room for the ↓ marker
@@ -141,13 +140,12 @@ func (m Model) geometry(w, h int) boardGeom {
 	return g
 }
 
-func (m Model) renderBoard(w, h int) string {
+func (m Model) renderBoard(w, h int, conflicts map[string]bool) string {
 	th := m.look.Theme
 	if len(m.board.Info().Tasks) == 0 {
 		return m.emptyBoard(w, h)
 	}
 	g := m.geometry(w, h)
-	conflicts := m.conflicts()
 	canvas := make([]string, h)
 	base := card.Painter{BG: th.Base}
 	for i := range canvas {

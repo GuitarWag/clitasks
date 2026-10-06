@@ -151,7 +151,7 @@ func (m Model) tlFrom(l timeline.Layout, z tlgrid.Zoom) time.Time {
 	return tlgrid.Align(m.tl.from, z)
 }
 
-func (m Model) renderTimeline(w, h int) string {
+func (m Model) renderTimeline(w, h int, conflicts map[string]bool) string {
 	th, ic := m.look.Theme, m.look.Icons
 	p := card.Painter{BG: th.Base}
 	rows, l := m.tlRows()
@@ -177,7 +177,7 @@ func (m Model) renderTimeline(w, h int) string {
 	}
 	out := tlgrid.Render(l, rows, m.ctx(), tlgrid.Opts{
 		Width: w, Zoom: zoom, From: m.tlFrom(l, zoom), Selected: selIdx,
-		Related: related, Conflicts: m.conflicts(), Highlight: m.q.terms(),
+		Related: related, Conflicts: conflicts, Highlight: m.q.terms(),
 		Offset: m.tl.offset, Height: g.chartRows,
 	})
 

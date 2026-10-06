@@ -82,3 +82,13 @@ func TestCard_showID(t *testing.T) {
 	lines := strings.Split(out, "\n")
 	assert.Contains(t, lines[len(lines)-1], "T-1")
 }
+
+// Height must match what Card renders, or the board scrolls wrongly.
+func TestHeight_matchesCard(t *testing.T) {
+	short := model.Task{ID: "T-2", Title: "Short", Priority: model.PriorityLow}
+	for _, tk := range []model.Task{long, short} {
+		for _, o := range []Opts{{Width: 34}, {Width: 20}, {Width: 34, ShowID: true}, {Width: 30, Compact: true}} {
+			assert.Equal(t, len(strings.Split(Card(tk, ctx("nord"), o), "\n")), Height(tk, o), "%s %+v", tk.ID, o)
+		}
+	}
+}

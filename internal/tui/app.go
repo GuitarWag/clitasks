@@ -471,14 +471,15 @@ func (m Model) View() tea.View {
 func (m Model) render() string {
 	w, h := m.size()
 	th := m.look.Theme
+	conflicts := m.conflicts() // once per frame: it builds the whole layout
 	var body string
 	if m.screen == screenTimeline {
-		body = m.renderTimeline(w, h-3)
+		body = m.renderTimeline(w, h-3, conflicts)
 	} else {
-		body = m.renderBoard(w, h-3)
+		body = m.renderBoard(w, h-3, conflicts)
 	}
 	blank := lipgloss.NewStyle().Background(th.Base).Width(w).Render("")
-	screen := strings.Join([]string{m.renderHeader(w), blank, fit(body, w, h-3, th.Base), m.renderStatus(w)}, "\n")
+	screen := strings.Join([]string{m.renderHeader(w, len(conflicts)), blank, fit(body, w, h-3, th.Base), m.renderStatus(w)}, "\n")
 
 	var layers []*lipgloss.Layer
 	if m.ov != nil || m.unfocused {

@@ -15,7 +15,7 @@ import (
 )
 
 // renderHeader is the top bar: brand, board name, tabs and alerts.
-func (m Model) renderHeader(w int) string {
+func (m Model) renderHeader(w, nConflicts int) string {
 	th, ic := m.look.Theme, m.look.Icons
 	p := card.Painter{BG: th.Crust}
 	info := m.board.Info()
@@ -49,7 +49,7 @@ func (m Model) renderHeader(w int) string {
 	if late > 0 {
 		alerts = append(alerts, p.Fg(th.Error).Render(fmt.Sprintf("%s %d late", ic.Due, late)))
 	}
-	if n := len(m.conflicts()); n > 0 {
+	if n := nConflicts; n > 0 {
 		alerts = append(alerts, p.Fg(th.Warn).Render(fmt.Sprintf("%s %d %s", ic.Warn, n, plural(n, "conflict"))))
 	}
 	right := tabs
