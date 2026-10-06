@@ -41,10 +41,11 @@ var Nerd = Set{
 
 var Unicode = Set{
 	Name: NameUnicode,
-	Todo: "○", InProgress: "◐", Blocked: "⊘", Done: "●",
+	// Only glyphs that common monospace fonts (JetBrains Mono, Menlo) have.
+	Todo: "○", InProgress: "◔", Blocked: "⊘", Done: "●",
 	Critical: "▲▲", High: "▲", Medium: "■", Low: "▼",
-	Due: "◷", Start: "▸", After: "↳", Assignee: "@", Tag: "#", Warn: "⚠",
-	Board: "▦", Timeline: "▤", Search: "⌕", Today: "◆",
+	Due: "⊙", Start: "▸", After: "↪", Assignee: "@", Tag: "#", Warn: "⚠",
+	Board: "□", Timeline: "⟶", Search: "/", Today: "◆",
 	Selected: "▌", Bullet: "·",
 }
 
