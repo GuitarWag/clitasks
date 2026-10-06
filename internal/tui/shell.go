@@ -87,7 +87,11 @@ func (m Model) renderStatus(w int) string {
 		in := m.searchIn
 		in.SetWidth(max(w/2, 20))
 		left += p.Fg(th.Info).Render(ic.Search+" ") + in.View()
-		return spread(p, left, hint(p, th, "enter", "apply")+hint(p, th, "esc", "clear"), w)
+		line := spread(p, left, hint(p, th, "enter", "apply")+hint(p, th, "esc", "clear"), w)
+		if th.Mono {
+			return line
+		}
+		return fillBG(line, th.Crust) // the text input leaves its cells unstyled
 	}
 	left += p.Fg(th.Subtext).Render(shortPath(m.path))
 	if !m.q.empty() {

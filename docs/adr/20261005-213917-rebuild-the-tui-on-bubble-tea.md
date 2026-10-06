@@ -1,7 +1,7 @@
 ---
 id: 20261005-213917-rebuild-the-tui-on-bubble-tea
 title: Rebuild the TUI on Bubble Tea v2 with a themed component layer
-status: proposed
+status: accepted
 date: 2026-10-05
 branch: feat/tui-redesign
 worktree: clitasks
@@ -9,7 +9,6 @@ session: 386254d3-bd79-4037-9422-519eabacf631
 affects:
   - internal/tui/**
   - internal/ui/**
-  - internal/theme/**
   - internal/timeline/**
   - internal/cli/**
 supersedes: []
@@ -58,3 +57,5 @@ Rebuild the TUI on Bubble Tea v2. Keep Go and the existing `board`, `storage` an
 - `timeline.RenderASCII` is replaced by the cell grid. Plain-text output stays available with the ASCII icons and no color.
 - TUI tests move to golden files rendered with the ASCII color profile, plus `teatest/v2` flow tests.
 - Wrong Nerd Font glyphs show as boxes, so the icon default must be careful. See the plan.
+- The CLI prints rich output only on a terminal. Pipes and agents keep the plain format, so scripts that parse it do not break.
+- The CLI does not query the terminal background (a silent terminal stalls the query for 2 s); it reads `COLORFGBG` and otherwise assumes dark. The TUI queries without blocking.

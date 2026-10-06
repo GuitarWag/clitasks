@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Redesigned TUI on Bubble Tea v2: a board of cards with a detail pane, a timeline screen with zoom, grouping, dependency markers and date edits, overlays over a dimmed screen, a form with date shortcuts and an `after` picker, search tokens, a command palette, mouse support, live reload of `tasks.md`, and focus dimming. See TUI_GUIDE.md.
+- Themes (`catppuccin-mocha`, `catppuccin-latte`, `tokyo-night`, `nord`, `mono`) and icon sets (`nerd`, `unicode`, `ascii`), with `--theme`, `--icons`, `TASKS_THEME` and `TASKS_ICONS`. The TUI picks dark or light from the terminal background.
+- On a terminal, `board`, `list`, `show`, `stats` and `timeline` use the TUI's cards and chart. Piped output keeps the plain format.
 - `tasks timeline`: an ASCII Gantt chart. It uses a week scale when the range does not fit.
 - TUI timeline view on the `t` key, with row selection and week scrolling.
 - `tasks export --format gantt`: Mermaid gantt output.
@@ -15,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Due and Start steps in the TUI add and edit form.
 
 ### Changed
+- Plain `tasks timeline` output uses the new chart: a two-line date header, task IDs in the labels, and day, week or month zoom.
+- Task text read from `tasks.md` drops control characters, so a shared file cannot send escape sequences to the terminal.
+- Go 1.26 or newer is required.
 - `--due` and `--start` accept only `YYYY-MM-DD`. Old boards with other due values still load, and those tasks show as unscheduled in the timeline.
 - A move to in-progress sets the start date to today if it is empty and the task is not overdue.
 - `delete` removes the deleted ID from the `after` list of other tasks.

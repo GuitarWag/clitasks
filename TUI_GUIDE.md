@@ -1,376 +1,179 @@
-# Terminal UI (TUI) Guide
+# TUI guide
 
-## Overview
-
-The Task Board TUI provides a beautiful, interactive terminal interface for managing your tasks. Navigate with arrow keys, edit tasks in-place, and get a real-time kanban view.
-
-## Launching the TUI
-
-There are three ways to launch the TUI:
+`tasks tui` opens the board in a full-screen terminal UI. It reads and writes the same `tasks.md` as the CLI, and it reloads the file when another program (for example an AI agent) changes it.
 
 ```bash
-# Method 1: Via tasks command
-tasks tui
-
-# Method 2: Direct executable
-tasks-tui
-
-# Method 3: With custom file
-tasks -f myboard.md tui
+tasks tui                          # tasks.md in this directory
+tasks tui -f ~/work/sprint.md      # another board file
+tasks tui --theme nord --icons nerd
 ```
 
-## Interface Layout
+![Board](docs/img/board.png)
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│        Project Alpha - Main development board              │
-│  Tasks: 7 | File: tasks.md                                 │
-└─────────────────────────────────────────────────────────────┘
-┌─────────────────────────────────────────────────────────────┐
-│        Filter: backend (Press Esc to clear)                │
-└─────────────────────────────────────────────────────────────┘
-┌──────────┬──────────────┬──────────┬──────────┐
-│   TODO   │ IN PROGRESS  │   DONE   │ BLOCKED  │
-│   (3)    │     (1)      │   (2)    │   (1)    │
-├──────────┼──────────────┼──────────┼──────────┤
-│          │              │          │          │
-│  ● Task1 │  ▶ Task2     │  ● Task5 │  ● Task7 │
-│  ● Task3 │    @alice    │  ● Task6 │          │
-│  ● Task4 │    #backend  │          │          │
-│          │              │          │          │
-└──────────┴──────────────┴──────────┴──────────┘
-┌─────────────────────────────────────────────────────────────┐
-│  ↑/↓ Navigate | ←/→ Column | e Edit | a Add | q Quit       │
-└─────────────────────────────────────────────────────────────┘
-```
+## Screens
 
-## Keyboard Shortcuts
+The TUI has two screens. Press `tab` to switch between them, or click a tab in the header. The selected task stays selected when you switch.
 
-### Navigation
-- **↑** or **k** - Move up in current column
-- **↓** or **j** - Move down in current column
-- **←** or **h** - Move to previous column
-- **→** or **l** - Move to next column
+### Board
 
-### Task Management
-- **a** - Add new task
-- **e** - Edit selected task
-- **d** - Delete selected task (with confirmation)
-- **s** - Quick status change menu
+Four columns: TODO, IN PROGRESS, BLOCKED and DONE. Each task is a card:
 
-### View & Search
-- **f** - Filter/search tasks across all columns
-- **t** - Switch between the board and the timeline (Gantt) view
-- **r** - Refresh board from file
-- **?** - Show help screen
+- A colored edge for the status. The selected card has an accent edge and a lighter background.
+- The title, on up to two lines.
+- Chips for the priority, the due date and the assignee. A due date is red when the task is late, pink when it is due today, and yellow when it is due within 3 days (in the default themes).
+- `↪` when the task waits for a task that is not done. `⚠` when its dates conflict with an `after` link.
+- The tags.
 
-### General
-- **q** or **Ctrl+C** - Quit application
-- **Esc** - Cancel dialog / Clear filter
+A column header shows the number of tasks. A red `· n` after it counts the tasks in that column that are late or in conflict.
 
-## Features
+The detail pane shows every field of the selected task: dates with relative times, the tasks it waits for, the tasks it blocks, conflicts, and the description. Where the pane goes depends on the terminal size:
 
-### 1. Column-Based Kanban View
+| Terminal width | Detail pane |
+|---|---|
+| 140 columns or more | On the right |
+| 100 to 139 columns | At the bottom (or on the right in a short terminal) |
+| Less than 100 columns | Hidden; `enter` opens it as an overlay |
 
-The TUI displays your tasks in four columns:
-- **TODO** (Yellow) - Tasks waiting to be started
-- **IN PROGRESS** (Blue) - Active tasks
-- **DONE** (Green) - Completed tasks
-- **BLOCKED** (Red) - Tasks that are blocked
+In a terminal less than 22 rows high, cards use one line each. A column that does not fit scrolls with the selection and shows `↑ n more` and `↓ n more`.
 
-Navigate between columns with arrow keys. The active column is highlighted.
+### Timeline
 
-### 2. Task Details on Selection
+![Timeline](docs/img/timeline.png)
 
-When you select a task, you'll see:
-- ● Priority indicator (color-coded)
-- ▶ Selection indicator
-- Task title (highlighted)
-- Assignee (if set)
-- Tags (if set)
-- Due date (if set)
-- Description preview (truncated if long)
+A Gantt chart of every task with a date. A bar starts on the start date, or on the creation date if the task has no start date. It ends on the due date. A done task without a due date ends on its last update. Other tasks without a due date end today and fade out (`▓▒░`).
 
-### 3. Add Tasks (Press 'a')
+- The header shows months on the first line, and days or ISO weeks on the second. Today is a highlighted pill in the header and a line down the chart.
+- Weekends have a darker background.
+- A bar shows its length in days, for example `14d`.
+- The selected row has a lighter background. The tasks that it waits for and the tasks that it blocks show `↪` in their labels. A task with a conflict shows `⚠`.
+- Tasks whose due or start date is not a `YYYY-MM-DD` date are listed under the chart. Press `u` to show or hide that list.
 
-Opens a dialog with fields for:
-- **Title** - Task name (required)
-- **Description** - Detailed description
-- **Priority** - low, medium, high, or critical
-- **Assignee** - Person responsible
-- **Tags** - Comma-separated tags
-- **Due** - Due date, YYYY-MM-DD
-- **Start** - Start date, YYYY-MM-DD
+Zoom levels: day (3 columns per day), week (1 column per day) and month (1 column per week). The timeline opens at the most detailed zoom that fits all bars.
 
-Use Tab/Shift+Tab to move between fields. Press Enter on "Save" or use the button.
+## Keys
 
-### 4. Edit Tasks (Press 'e')
+Press `?` in the TUI for this list. Every key does the same thing on every screen, or is used on one screen only.
 
-Edit any field of the selected task:
-- Modify title, description, priority
-- Change assignee
-- Update tags
-- All changes are saved to the markdown file
+### Everywhere
 
-### 5. Delete Tasks (Press 'd')
+| Key | Action |
+|---|---|
+| `a` | Add a task |
+| `e` | Edit the selected task |
+| `d` | Delete the selected task (asks first, and lists the tasks that lose their link) |
+| `space` | Change the status |
+| `enter` | Show or hide the detail pane |
+| `/` | Search |
+| `ctrl+k` or `:` | Command palette |
+| `tab` | Switch between board and timeline |
+| `r` | Reload `tasks.md` |
+| `esc` | Close an overlay, or clear the search |
+| `?` | Help |
+| `q` | Quit |
 
-Confirmation dialog before deletion:
-- Shows task title
-- Asks for confirmation (Yes/No)
-- Cannot be undone
+### Board
 
-### 6. Quick Status Change (Press 's')
+| Key | Action |
+|---|---|
+| `↑` `↓` or `k` `j` | Select the previous or next card |
+| `←` `→` or `h` `l` | Move to the previous or next column |
+| `H` `L` | Move the selected task to the column on the left or right |
+| `1` to `4` | Jump to TODO, IN PROGRESS, BLOCKED or DONE |
+| `g` `G` | First or last card |
 
-Fast way to move tasks between columns:
-- Opens menu with all statuses
-- Use arrow keys to select
-- Press Enter to move task
+### Timeline
 
-### 7. Real-Time Filtering (Press 'f') 🆕
+| Key | Action |
+|---|---|
+| `↑` `↓` or `k` `j` | Select the previous or next bar |
+| `←` `→` or `h` `l` | Scroll one step (a day, a week or 4 weeks, by zoom) |
+| `{` `}` | Scroll most of a screen |
+| `z` | Cycle the zoom: day, week, month |
+| `+` `-` | Zoom in or out |
+| `.` | Scroll to today |
+| `f` | Fit all bars |
+| `b` | Group by: none, status, assignee, tag |
+| `u` | Show or hide the unscheduled tasks |
+| `<` `>` | Move the bar one day earlier or later (start and due) |
+| `alt+<` `alt+>` | Move only the due date |
+| `[` `]` | Set the start date or the due date to today |
 
-**NEW FEATURE**: Search across all tasks and columns
+Date changes go through the same validation as the CLI. A change that would put the start after the due date is refused, and a message says why.
 
-Filter searches:
-- Task titles
-- Descriptions
-- Assignees
-- Tags
+## Mouse
 
-Example filters:
-- "backend" - Shows all tasks tagged or mentioning backend
-- "alice" - Shows tasks assigned to alice
-- "bug" - Shows all bug-related tasks
+- Click a card or a timeline row to select it. Click it again within a moment to edit it.
+- Use the wheel to move the selection. On the timeline, hold `shift` (or use a horizontal wheel) to scroll the dates.
+- Click a tab in the header to switch screens.
 
-Press **Esc** to clear the filter.
+## Search
 
-### 8. Quick Actions Menu (Press 's') 🆕
+![Search](docs/img/search.png)
 
-**NEW FEATURE**: Fast keyboard-driven task status changes
+Press `/` and type. The board and the timeline update as you type, and matches in titles are highlighted. `enter` keeps the search, and `esc` clears it.
 
-Instead of:
-1. Press 'e' to edit
-2. Navigate to status field
-3. Change status
-4. Save
+| Token | Matches |
+|---|---|
+| `word` | Title, description or ID contains the word (all words must match) |
+| `@alice` | Assignee starts with `alice` |
+| `#backend` | A tag starts with `backend` (several tags must all match) |
+| `!high`, `!crit` | Priority (several are alternatives) |
+| `is:overdue` | Due date is in the past and the task is not done |
+| `is:open`, `is:done`, `is:todo`, `is:doing`, `is:blocked` | Status |
+| `is:waiting` | Waits for a task that is not done |
+| `due:<7d`, `due:>3d` | Due in fewer or more than n days |
+| `due:today`, `due:none` | Due today, or no due date |
 
-Just:
-1. Press 's'
-2. Select new status
-3. Done!
+Example: `parser @bob !high is:open`.
 
-### 9. Timeline View (Press 't')
+## Editing a task
 
-Shows the tasks as a Gantt chart. The view uses the same filter as the board.
+![Form](docs/img/form.png)
 
-- **↑/k** and **↓/j** select a row
-- **←/h** and **→/l** scroll the chart one week
-- **e**, **s**, **d** act on the selected row
-- **t** or **Esc** go back to the board
+`a` and `e` open the form over the board. On a wide terminal it has two columns: the task fields on the left, the schedule on the right.
 
-Bar rules are the same as `tasks timeline`. See the README. The view shows the number of `after` conflicts and unscheduled tasks under the chart. Run `tasks timeline` to list them.
+- **Start** and **Due** accept `YYYY-MM-DD` and shortcuts: `today`, `tomorrow`, `+3d`, `+2w`, `+1m`, a weekday such as `fri` (the next one after today), and `next week` (next Monday). The board stores the date as `YYYY-MM-DD`.
+- **Waits for** lists the other tasks. Type to filter, and press `space` or `x` to select. A link that would make a cycle is refused while you choose.
+- Errors show under the field as you type.
+- `enter` goes to the next field and saves after the last one. `ctrl+s` saves from any field.
+- `esc` closes a form that has no changes. With changes, the first `esc` asks, and the second one discards them.
 
-## Color Coding
+An old due date that is not a date (such as `next sprint`) stays as it is while you leave the field alone.
 
-### Priority Colors
-- 🔴 **Red** - Critical
-- 🟡 **Yellow** - High
-- 🔵 **Blue** - Medium
-- ⚪ **White** - Low
+## Command palette
 
-### Column Colors
-- 🟡 **Yellow** - TODO
-- 🔵 **Blue** - IN PROGRESS
-- 🟢 **Green** - DONE
-- 🔴 **Red** - BLOCKED
+`ctrl+k` lists every action with its key. Type part of a name to filter (`grass` finds "Timeline: group by assignee"), then press `enter`. The palette also has actions without a key:
 
-## Tips & Tricks
+- Change the theme or the icons for this session.
+- Copy the timeline as a Mermaid gantt chart to the clipboard (through OSC 52, so it works over SSH in most terminals).
 
-### 1. Vim-Style Navigation
-If you're a Vim user, you'll feel at home:
-- `h/j/k/l` for navigation (left/down/up/right)
-- Works alongside arrow keys
+## Themes and icons
 
-### 2. Quick Filtering Workflow
-```
-1. Press 'f'
-2. Type "alice"
-3. See only Alice's tasks
-4. Navigate and edit
-5. Press 'f' then Esc to clear
-```
+![Light theme](docs/img/board-light.png)
 
-### 3. Bulk Status Changes
-```
-1. Filter for specific tasks (e.g., "frontend")
-2. Navigate through filtered results
-3. Press 's' to change status quickly
-4. Repeat for each task
-```
+The TUI asks the terminal for its background color, and uses Catppuccin Mocha on a dark background or Catppuccin Latte on a light one. To choose:
 
-### 4. Multi-File Boards
 ```bash
-# Work board
-tasks -f work.md tui
-
-# Personal board
-tasks -f personal.md tui
-
-# Project board
-cd ~/project
-tasks tui  # Uses local tasks.md
+export TASKS_THEME=tokyo-night   # auto, catppuccin-mocha, catppuccin-latte, tokyo-night, nord, mono
+export TASKS_ICONS=nerd          # auto, nerd, unicode, ascii
+tasks tui --theme nord           # a flag wins over the env var
 ```
 
-### 5. Refresh After External Changes
-If someone else (or another process) modifies the tasks.md file:
-- Press **r** to reload from disk
-- Your view updates immediately
+- `auto` icons use Nerd Font glyphs in WezTerm and Ghostty, which ship them, and Unicode glyphs elsewhere. If you see boxes, set `TASKS_ICONS=unicode`.
+- `NO_COLOR=1` gives a theme with no colors (bold, faint and reverse only) and ASCII icons.
+- Every preset is tested for contrast: body text is at least 4.5:1 against the background, and other colors at least 3:1.
 
-## Comparison: CLI vs TUI
+When the terminal window loses focus, the TUI dims until you come back.
 
-| Feature | CLI | TUI |
-|---------|-----|-----|
-| View all columns | `tasks board` | Always visible |
-| Navigate tasks | List commands | Arrow keys |
-| Edit task | `tasks update ID` | Press 'e' |
-| Filter | `tasks list --filter` | Press 'f' |
-| Visual feedback | Text output | Color-coded UI |
-| Multi-tasking | New commands | Single interface |
-| Speed | Fast for single ops | Fast for browsing |
+## Live reload
 
-**When to use CLI:**
-- Scripts and automation
-- Quick single operations
-- CI/CD pipelines
-- Remote SSH sessions (if TUI has issues)
-
-**When to use TUI:**
-- Planning sessions
-- Daily standup review
-- Organizing multiple tasks
-- Visual task management
-- Interactive work sessions
-
-## Accessibility
-
-The TUI is designed to work in:
-- ✅ macOS Terminal
-- ✅ iTerm2
-- ✅ Linux terminals (xterm, gnome-terminal, etc.)
-- ✅ Windows Terminal
-- ✅ SSH sessions
-- ⚠️ tmux/screen (may need 256 color support)
-
-For best experience:
-- Use a terminal with 256 color support
-- Terminal window at least 80 columns wide
-- Terminal window at least 24 rows tall
+The TUI checks `tasks.md` every 2 seconds. When another program changes it, the TUI reloads the file, keeps your selection, and shows a message. If a form is open, the reload waits until you close it.
 
 ## Troubleshooting
 
-### Issue: Colors not showing correctly
-**Solution**: Check your terminal supports 256 colors
-```bash
-echo $TERM  # Should show something like "xterm-256color"
-```
-
-### Issue: TUI crashes on startup
-**Solution**: Ensure tasks.md exists or initialize first
-```bash
-tasks init --name "My Board"
-tasks tui
-```
-
-### Issue: Arrow keys not working
-**Solution**: Try Vim-style keys (h/j/k/l) instead
-
-### Issue: Can't edit task fields
-**Solution**: Use Tab/Shift+Tab to move between fields in dialogs
-
-## Advanced Usage
-
-### Custom File Paths
-```bash
-# Environment variable
-export TASK_BOARD_FILE=~/boards/sprint-5.md
-tasks tui
-
-# Command line
-tasks -f ~/boards/sprint-5.md tui
-```
-
-### Integration with Git
-```bash
-# Before starting work
-git pull
-tasks tui
-
-# After making changes
-git add tasks.md
-git commit -m "Updated task board"
-git push
-```
-
-### AI Agent Workflow
-```bash
-# AI checks board visually
-tasks tui
-
-# AI creates tasks via CLI (from another terminal)
-tasks add "Implement feature X" -a claude
-
-# Refresh TUI to see new task
-# (Press 'r' in TUI)
-```
-
-## Screenshots (Text Mode)
-
-### Viewing Filtered Tasks
-```
-Filter: frontend
-TODO (1)          IN PROGRESS (1)    DONE (0)         BLOCKED (0)
-  ▶ Fix layout      ● Build UI         (empty)          (empty)
-    @alice            @bob
-    #frontend         #frontend
-```
-
-### Editing a Task
-```
-┌─ Edit Task: T-ABC123 ─────────────────────┐
-│                                           │
-│ Title:                                    │
-│ ┌───────────────────────────────────────┐ │
-│ │ Fix responsive layout                 │ │
-│ └───────────────────────────────────────┘ │
-│                                           │
-│ Description:                              │
-│ ┌───────────────────────────────────────┐ │
-│ │ Mobile view is broken                 │ │
-│ │                                       │ │
-│ └───────────────────────────────────────┘ │
-│                                           │
-│ Priority:    Assignee:      Tags:        │
-│ ┌─────────┐  ┌─────────┐   ┌──────────┐ │
-│ │critical │  │alice    │   │frontend  │ │
-│ └─────────┘  └─────────┘   └──────────┘ │
-│                                           │
-│  [Save]  [Cancel]                        │
-└───────────────────────────────────────────┘
-```
-
-## Future Enhancements
-
-Potential additions:
-- Drag & drop tasks between columns
-- Dependency arrows in the timeline view
-- Time tracking integration
-- Customizable color schemes
-- Mouse support
-- Split screen mode (multiple boards)
-- Task history/changelog view
-- Bulk operations
-
----
-
-**Enjoy your new visual task management interface!**
-
-Press 'h' anytime in the TUI for quick help.
+| Problem | Fix |
+|---|---|
+| Boxes instead of icons | `TASKS_ICONS=unicode`, or install a Nerd Font |
+| Wrong theme for a light terminal | `TASKS_THEME=catppuccin-latte` (some terminals do not report their background) |
+| Colors look washed out | Your terminal may only support 256 colors; the TUI adapts, but true color looks best |
+| `alt+<` does nothing | Some terminals do not send `alt` with these keys; use the command palette |

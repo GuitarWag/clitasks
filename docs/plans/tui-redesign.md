@@ -1,6 +1,17 @@
 # Plan: TUI and CLI UI redesign
 
-Decision: [Rebuild the TUI on Bubble Tea v2 with a themed component layer](../adr/20261005-213917-rebuild-the-tui-on-bubble-tea.md) (`proposed`).
+Decision: [Rebuild the TUI on Bubble Tea v2 with a themed component layer](../adr/20261005-213917-rebuild-the-tui-on-bubble-tea.md) (`accepted`).
+
+Status: done (2026-10-06). The build differs from this plan in these places:
+
+- `internal/tui` is one package, not one subpackage per screen. The screens share the model and the geometry, and separate packages added interfaces with one user.
+- `tab` switches screens. `1` to `4` jump to board columns, so `1`/`2` are not screen keys.
+- Mouse hit-testing uses the board geometry function that the renderer also uses, not `Compositor.Hit`. Overlays and toasts use the compositor.
+- The TUI tests drive the model directly (`Update` and `render`), not `teatest/v2`.
+- The CLI prints rich output only on a terminal. Pipes keep the plain format with ASCII icons and IDs, because agents parse it. The CLI reads `COLORFGBG` for dark or light instead of querying the terminal, which could stall a command for 2 s.
+- The Unicode icons are `○ ◔ ⊘ ●` and `⊙ ▸ ↪`: `◐ ◷ ↳` are missing from common monospace fonts. The Nerd glyphs come from nerd-fonts `glyphnames.json`.
+- No VHS tapes. The README uses screenshots from the preview harness (`UI_PREVIEW_DIR`) rendered with `freeze`.
+- Task text from `tasks.md` drops control characters at parse time (a security review finding during the work).
 
 User choices (2026-10-05): Nerd Font icons with a fallback, preset themes chosen from the terminal background, kanban cards with a detail pane, and mouse support.
 
