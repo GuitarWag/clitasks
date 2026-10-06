@@ -251,6 +251,7 @@ func (f *formOverlay) submit(m *Model) (bool, tea.Cmd) {
 	if f.editing != nil {
 		verb = "Saved "
 	}
+	m.mtime = m.fileMtime() // our own save, not a change to reload
 	cmd := m.write(verb+saved.ID, func() error { return nil })
 	m.selectTask(saved)
 	return true, cmd
