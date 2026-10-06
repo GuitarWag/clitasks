@@ -363,3 +363,22 @@ func TestRead_startAndAfterInAnyOrder(t *testing.T) {
 	assert.Equal(t, "2026-06-01", got.Tasks[0].Start)
 	assert.Equal(t, []string{"T-A", "T-C"}, got.Tasks[0].After)
 }
+
+// A shared tasks.md must not carry terminal escape sequences into the UI.
+func TestRead_stripsControlCharacters(t *testing.T) {
+	p := tmpFile(t)
+	md := "# Board: B\x1b]0;pwned\x07\n\n## TODO\n\n" +
+		"- [ ] [T-1] **Title\x1b]52;c;ZXZpbA==\x07** `priority:low` `assignee:bo\x1b[31mb` `tags:a\x1b[0m`\n" +
+		"  > desc\x1b[2J here\n"
+	require.NoError(t, os.WriteFile(p, []byte(md), 0o644))
+	b, err := NewMarkdown(p).Read()
+	require.NoError(t, err)
+	assert.Equal(t, "B]0;pwned", b.Name)
+	require.Len(t, b.Tasks, 1)
+	tk := b.Tasks[0]
+	for _, s := range []string{tk.Title, tk.Assignee, tk.Description, strings.Join(tk.Tags, "")} {
+		assert.NotContains(t, s, "\x1b", s)
+		assert.NotContains(t, s, "\x07", s)
+	}
+	assert.Equal(t, "Title]52;c;ZXZpbA==", tk.Title)
+}

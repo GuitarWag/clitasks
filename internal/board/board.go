@@ -82,12 +82,12 @@ func (b *Board) Add(title string, in AddInput) (model.Task, error) {
 	}
 	t := model.Task{
 		ID:          newID(now, b.rng),
-		Title:       title,
-		Description: in.Description,
+		Title:       model.CleanText(title),
+		Description: model.CleanText(in.Description),
 		Status:      model.StatusTodo,
 		Priority:    priority,
-		Assignee:    in.Assignee,
-		Tags:        slices.Clone(in.Tags),
+		Assignee:    model.CleanText(in.Assignee),
+		Tags:        cleanAll(in.Tags),
 		DueDate:     in.DueDate,
 		Start:       in.Start,
 		After:       dedupe(in.After),
@@ -114,19 +114,19 @@ func (b *Board) Update(id string, in UpdateInput) (model.Task, error) {
 	nt := b.data.Tasks[idx]
 	t := &nt
 	if in.Title != nil {
-		t.Title = *in.Title
+		t.Title = model.CleanText(*in.Title)
 	}
 	if in.Description != nil {
-		t.Description = *in.Description
+		t.Description = model.CleanText(*in.Description)
 	}
 	if in.Priority != nil {
 		t.Priority = *in.Priority
 	}
 	if in.Assignee != nil {
-		t.Assignee = *in.Assignee
+		t.Assignee = model.CleanText(*in.Assignee)
 	}
 	if in.Tags != nil {
-		t.Tags = slices.Clone(*in.Tags)
+		t.Tags = cleanAll(*in.Tags)
 	}
 	if in.DueDate != nil {
 		t.DueDate = *in.DueDate
@@ -358,3 +358,14 @@ func hasAnyTag(taskTags, want []string) bool {
 }
 
 func (b *Board) save() error { return b.store.Write(b.data) }
+
+func cleanAll(ss []string) []string {
+	if ss == nil {
+		return nil
+	}
+	out := make([]string, len(ss))
+	for i, s := range ss {
+		out[i] = model.CleanText(s)
+	}
+	return out
+}

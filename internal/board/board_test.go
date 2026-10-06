@@ -302,3 +302,16 @@ func TestCheckAfter(t *testing.T) {
 	assert.ErrorContains(t, b.CheckAfter(a.ID, []string{c.ID}), "cycle")
 	assert.ErrorContains(t, b.CheckAfter(a.ID, []string{a.ID}), "itself")
 }
+
+func TestAddUpdate_cleanText(t *testing.T) {
+	b := newTestBoard(t)
+	tk, err := b.Add("a\x1b]0;x\x07b", AddInput{Description: "d\x1b[2J", Assignee: "x\x07", Tags: []string{"t\x1b"}})
+	require.NoError(t, err)
+	assert.Equal(t, "a]0;xb", tk.Title)
+	assert.Equal(t, "d[2J", tk.Description)
+	assert.Equal(t, "x", tk.Assignee)
+	assert.Equal(t, []string{"t"}, tk.Tags)
+	got, err := b.Update(tk.ID, UpdateInput{Title: ptr("c\x1bd")})
+	require.NoError(t, err)
+	assert.Equal(t, "cd", got.Title)
+}
