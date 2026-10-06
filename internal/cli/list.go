@@ -42,6 +42,12 @@ func newListCmd() *cobra.Command {
 				fmt.Fprintln(out, styleYellow.Render("No tasks found"))
 				return nil
 			}
+			if o := outputOf(cmd); o.rich && !detailed {
+				for _, t := range tasks {
+					fmt.Fprintln(out, richRow(o, t))
+				}
+				return nil
+			}
 			fmt.Fprintln(out, styleBold.Render(fmt.Sprintf("\nFound %d task(s):", len(tasks))))
 			for _, t := range tasks {
 				renderTask(out, t, detailed)

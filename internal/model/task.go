@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -85,4 +86,19 @@ type Board struct {
 	Tasks       []Task    `json:"tasks"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+// CleanText removes control characters (C0, DEL and C1) and turns tabs into
+// spaces. Task text is printed to terminals; a title read from a shared
+// tasks.md must not carry escape sequences that the terminal would run.
+func CleanText(s string) string {
+	return strings.Map(func(r rune) rune {
+		switch {
+		case r == '\t':
+			return ' '
+		case r < 0x20, r == 0x7f, r >= 0x80 && r <= 0x9f:
+			return -1
+		}
+		return r
+	}, s)
 }

@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"github.com/GuitarWag/clitasks/internal/ui/card"
 )
 
 func newShowCmd() *cobra.Command {
@@ -19,6 +21,23 @@ func newShowCmd() *cobra.Command {
 			t, ok := b.Get(args[0])
 			if !ok {
 				fmt.Fprintln(cmd.OutOrStdout(), styleError.Render("✗ Task not found: "+args[0]))
+				return nil
+			}
+			if o := outputOf(cmd); o.rich {
+				var rel card.Related
+				for _, id := range t.After {
+					if a, ok := b.Get(id); ok {
+						rel.After = append(rel.After, a)
+					}
+				}
+				for _, id := range b.Dependents(t.ID) {
+					if d, ok := b.Get(id); ok {
+						rel.Dependents = append(rel.Dependents, d)
+					}
+				}
+				for _, l := range card.Detail(t, rel, o.ctx(), min(o.width, 72)) {
+					fmt.Fprintln(cmd.OutOrStdout(), l)
+				}
 				return nil
 			}
 			renderTask(cmd.OutOrStdout(), t, true)

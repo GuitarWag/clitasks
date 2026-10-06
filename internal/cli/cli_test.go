@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/charmbracelet/x/ansi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -385,14 +386,20 @@ func TestTimeline(t *testing.T) {
 	out, _ = runCmd(t, "add", "build", "--start", "2026-06-05", "--due", "2026-06-12", "--after", a)
 	b := idRe.FindString(out)
 
-	out, err := runCmd(t, "timeline", "--width", "60")
+	out, err := runCmd(t, "timeline", "--width", "120")
 	require.NoError(t, err)
+	assert.NotContains(t, out, "\x1b[", "plain output has no escape codes")
 	lines := strings.Split(out, "\n")
-	require.GreaterOrEqual(t, len(lines), 3)
-	assert.Contains(t, lines[1], a)
-	assert.Contains(t, lines[1], "██████████")
-	assert.Contains(t, lines[2], b)
-	assert.Contains(t, out, "1 column = 1 day")
+	require.GreaterOrEqual(t, len(lines), 4)
+	assert.Contains(t, lines[0], "Jun 2026")
+	assert.Contains(t, lines[2], "[ ] "+a+" design", "plain output uses ASCII icons and shows IDs")
+	assert.Contains(t, lines[2], strings.Repeat("█", 30), "10 days at 3 columns each")
+	assert.Contains(t, lines[3], b)
+	assert.Contains(t, out, "day zoom")
+
+	out, err = runCmd(t, "timeline", "--width", "60")
+	require.NoError(t, err)
+	assert.Contains(t, out, "week zoom", "a narrow chart switches to the week zoom")
 	assert.Contains(t, out, b+" starts 2026-06-05, before "+a+" ends 2026-06-10")
 
 	out, err = runCmd(t, "timeline", "--status", "done")
@@ -420,4 +427,43 @@ func TestTimeline_unscheduledNamesTheBadField(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, out, "T-OLD-002 bad start start:next-week")
 	assert.NotContains(t, out, "due:")
+}
+
+func TestRichOutput(t *testing.T) {
+	withBoardFile(t)
+	forceRich = true
+	t.Cleanup(func() { forceRich = false })
+	t.Setenv("TASKS_ICONS", "unicode")
+	t.Setenv("TASKS_THEME", "nord")
+
+	out, _ := runCmd(t, "add", "Design the schema", "-p", "high", "-a", "alice", "--due", "2026-06-10")
+	a := idRe.FindString(out)
+	_, _ = runCmd(t, "add", "Write the parser", "--after", a)
+
+	board, err := runCmd(t, "board")
+	require.NoError(t, err)
+	plain := ansi.Strip(board)
+	for _, want := range []string{"TODO", "IN PROGRESS", "BLOCKED", "DONE", "Design the schema", a, "▲ high", "@alice"} {
+		assert.Contains(t, plain, want)
+	}
+
+	list, _ := runCmd(t, "list")
+	assert.Contains(t, ansi.Strip(list), "○ "+a+" Design the schema ▲ high")
+
+	show, _ := runCmd(t, "show", a)
+	plain = ansi.Strip(show)
+	assert.Contains(t, plain, "Todo")
+	assert.Contains(t, plain, "Blocks")
+	assert.Contains(t, plain, "Write the parser")
+
+	stats, _ := runCmd(t, "stats")
+	assert.Contains(t, ansi.Strip(stats), "█")
+}
+
+func TestDarkFromEnv(t *testing.T) {
+	assert.True(t, darkFromEnv(""))
+	assert.True(t, darkFromEnv("15;0"))
+	assert.False(t, darkFromEnv("0;15"))
+	assert.False(t, darkFromEnv("0;default;7"))
+	assert.True(t, darkFromEnv("garbage"))
 }

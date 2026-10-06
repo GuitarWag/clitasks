@@ -4,6 +4,7 @@
 
 | Record | Status | Date | Tags |
 |---|---|---|---|
+| [Rebuild the TUI on Bubble Tea v2 with a themed component layer](20261005-213917-rebuild-the-tui-on-bubble-tea.md) | accepted | 2026-10-05 | tui, architecture |
 | [Compute one timeline layout for CLI, TUI and Mermaid](20261004-132518-compute-one-timeline-layout-for-cli.md) | accepted | 2026-10-04 | timeline, architecture |
 | [Add start and after fields to the task line](20261004-132518-add-start-and-after-fields-to.md) | accepted | 2026-10-04 | storage, timeline |
 | [Write the board file atomically without a directory fsync](20261004-131735-write-the-board-file-atomically-without.md) | accepted | 2026-05-17 | storage, durability |
@@ -18,22 +19,25 @@
 
 ```mermaid
 graph TD
-  n0["Compute one timeline layout for CLI, TUI and Mermaid"]
-  n1["Add start and after fields to the task line"]
-  n2["Write the board file atomically without a directory fsync"]
-  n3["Write exports with mode 0600"]
-  n4["Store the board in one Markdown file"]
-  n5["Resolve the board file from flag, then env var, then tasks.…"]
-  n6["Generate task IDs from a base36 timestamp and a random suff…"]
-  n7["Embed SKILL.md from a canonical root copy"]
-  n8["Port clitasks from TypeScript to Go"]
+  n0["Rebuild the TUI on Bubble Tea v2 with a themed component la…"]
+  n1["Compute one timeline layout for CLI, TUI and Mermaid"]
+  n2["Add start and after fields to the task line"]
+  n3["Write the board file atomically without a directory fsync"]
+  n4["Write exports with mode 0600"]
+  n5["Store the board in one Markdown file"]
+  n6["Resolve the board file from flag, then env var, then tasks.…"]
+  n7["Generate task IDs from a base36 timestamp and a random suff…"]
+  n8["Embed SKILL.md from a canonical root copy"]
+  n9["Port clitasks from TypeScript to Go"]
   n0 --> n1
-  n1 --> n4
-  n2 --> n4
-  n2 --> n8
-  n3 --> n8
-  n4 --> n8
-  n5 --> n8
-  n6 --> n8
-  n7 --> n8
+  n0 --> n9
+  n1 --> n2
+  n2 --> n5
+  n3 --> n5
+  n3 --> n9
+  n4 --> n9
+  n5 --> n9
+  n6 --> n9
+  n7 --> n9
+  n8 --> n9
 ```

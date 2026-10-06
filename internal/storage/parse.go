@@ -53,7 +53,7 @@ func parseMarkdown(data []byte, clock func() time.Time) *model.Board {
 	sc := bufio.NewScanner(bytes.NewReader(data))
 	sc.Buffer(make([]byte, 64*1024), 1024*1024)
 	for sc.Scan() {
-		line := sc.Text()
+		line := model.CleanText(sc.Text())
 
 		switch {
 		case strings.HasPrefix(line, "# Board:"):

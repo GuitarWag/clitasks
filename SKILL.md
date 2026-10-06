@@ -91,6 +91,10 @@ tasks export --format json -o backup.json # Write to file
 tasks init -n "Sprint 1" -d "Sprint 1 tasks"
 ```
 
+## Output for agents
+
+When the output goes to a pipe (as it does when an agent runs the command), `tasks` prints plain text with ASCII icons and task IDs. On a terminal it prints styled cards and charts instead. `tasks tui` is for people; agents use the commands above.
+
 ## Task IDs
 
 Every task gets a unique ID like `T-ML31897Y-TKP`. Use this ID for all update/move/delete/show commands. Get IDs from `tasks board` or `tasks list`.

@@ -2,6 +2,7 @@ package board
 
 import (
 	"math/rand/v2"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -291,4 +292,60 @@ func TestUpdate_unrelatedFieldIgnoresStoredStartAfterDue(t *testing.T) {
 	require.NoError(t, err)
 	_, err = b.Update(tk.ID, UpdateInput{DueDate: ptr("2026-06-02")})
 	assert.ErrorContains(t, err, "after due", "a date the caller sets is still checked")
+}
+
+func TestCheckAfter(t *testing.T) {
+	b := newTestBoard(t)
+	a, _ := b.Add("a", AddInput{})
+	c, _ := b.Add("c", AddInput{After: []string{a.ID}})
+	assert.NoError(t, b.CheckAfter("", []string{a.ID}))
+	assert.ErrorIs(t, b.CheckAfter("", []string{"T-NOPE"}), ErrNotFound)
+	assert.ErrorContains(t, b.CheckAfter(a.ID, []string{c.ID}), "cycle")
+	assert.ErrorContains(t, b.CheckAfter(a.ID, []string{a.ID}), "itself")
+}
+
+func TestAddUpdate_cleanText(t *testing.T) {
+	b := newTestBoard(t)
+	tk, err := b.Add("a\x1b]0;x\x07b", AddInput{Description: "d\x1b[2J", Assignee: "x\x07", Tags: []string{"t\x1b"}})
+	require.NoError(t, err)
+	assert.Equal(t, "a]0;xb", tk.Title)
+	assert.Equal(t, "d[2J", tk.Description)
+	assert.Equal(t, "x", tk.Assignee)
+	assert.Equal(t, []string{"t"}, tk.Tags)
+	got, err := b.Update(tk.ID, UpdateInput{Title: ptr("c\x1bd")})
+	require.NoError(t, err)
+	assert.Equal(t, "cd", got.Title)
+}
+
+func TestAdd_withStatusIsOneWrite(t *testing.T) {
+	b := newTestBoard(t)
+	tk, err := b.Add("x", AddInput{Status: model.StatusInProgress})
+	require.NoError(t, err)
+	assert.Equal(t, model.StatusInProgress, tk.Status)
+	assert.Equal(t, b.clock().In(time.Local).Format(time.DateOnly), tk.Start)
+	_, err = b.Add("y", AddInput{Status: "bogus"})
+	assert.Error(t, err)
+}
+
+// A failed save must leave memory equal to the file, so a retry is safe.
+func TestWrites_rollBackOnSaveError(t *testing.T) {
+	b := newTestBoard(t)
+	keep, _ := b.Add("keep", AddInput{})
+	dir := filepath.Dir(b.Path())
+	require.NoError(t, os.Chmod(dir, 0o500))
+	t.Cleanup(func() { _ = os.Chmod(dir, 0o700) })
+
+	_, err := b.Add("lost", AddInput{})
+	require.Error(t, err)
+	assert.Len(t, b.List(Filter{}), 1, "the failed add is not kept in memory")
+
+	_, err = b.Update(keep.ID, UpdateInput{Title: ptr("renamed")})
+	require.Error(t, err)
+	got, _ := b.Get(keep.ID)
+	assert.Equal(t, "keep", got.Title)
+
+	_, err = b.Delete(keep.ID)
+	require.Error(t, err)
+	_, ok := b.Get(keep.ID)
+	assert.True(t, ok)
 }

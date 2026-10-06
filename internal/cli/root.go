@@ -6,13 +6,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 	"github.com/spf13/cobra"
 
 	"github.com/GuitarWag/clitasks/internal/board"
 	"github.com/GuitarWag/clitasks/internal/model"
 	"github.com/GuitarWag/clitasks/internal/storage"
-	"github.com/GuitarWag/clitasks/internal/theme"
+	"github.com/GuitarWag/clitasks/internal/ui"
+	uitheme "github.com/GuitarWag/clitasks/internal/ui/theme"
 )
 
 func newRootCmd(version string) *cobra.Command {
@@ -22,9 +23,17 @@ func newRootCmd(version string) *cobra.Command {
 		Version:       version,
 		SilenceUsage:  true,
 		SilenceErrors: false,
+		// setupOutput picks rich or plain output and the theme. Lip Gloss v2
+		// always emits full color; the writer it installs downsamples it and
+		// strips it for pipes and NO_COLOR.
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error { return setupOutput(cmd) },
 	}
 	root.PersistentFlags().StringP("file", "f", "",
 		"Path to the markdown file (default: $TASK_BOARD_FILE or tasks.md)")
+	root.PersistentFlags().String("theme", "",
+		"Color theme: "+strings.Join(uitheme.Names(), "|")+" (default: $TASKS_THEME or auto)")
+	root.PersistentFlags().String("icons", "",
+		"Icon set: auto|nerd|unicode|ascii (default: $TASKS_ICONS or auto)")
 
 	root.AddCommand(
 		newInitCmd(), newAddCmd(), newListCmd(), newBoardCmd(), newShowCmd(),
@@ -55,6 +64,18 @@ func resolveFilePath(cmd *cobra.Command) string {
 	return storage.DefaultFile
 }
 
+// lookOptions merges the --theme and --icons flags over the env vars.
+func lookOptions(cmd *cobra.Command) (ui.Options, error) {
+	o := ui.OptionsFromEnv(os.Getenv)
+	if v, _ := cmd.Flags().GetString("theme"); v != "" {
+		o.Theme = v
+	}
+	if v, _ := cmd.Flags().GetString("icons"); v != "" {
+		o.Icons = v
+	}
+	return o, o.Validate()
+}
+
 func openBoard(cmd *cobra.Command) (*board.Board, error) {
 	return board.Open(storage.NewMarkdown(resolveFilePath(cmd)))
 }
@@ -74,23 +95,15 @@ func splitTags(s string) []string {
 	return out
 }
 
+// Plain-output styles. applyLook sets them from the theme before a command runs.
 var (
-	styleSuccess = theme.Success
-	styleError   = theme.Error
-	styleWarn    = theme.Warn
-	styleDim     = theme.Dim
-	styleBold    = theme.Bold
-	styleCyan    = theme.Cyan
-	styleGreen   = theme.Green
-	styleYellow  = theme.Yellow
-	styleBlue    = theme.Blue
-	styleMagenta = theme.Magenta
-	styleRed     = theme.Red
-	styleGray    = theme.Gray
+	styleSuccess, styleError, styleWarn, styleDim, styleBold lipgloss.Style
+	styleCyan, styleGreen, styleYellow, styleBlue            lipgloss.Style
+	styleMagenta, styleRed, styleGray                        lipgloss.Style
 )
 
 func priorityStyle(p model.TaskPriority) lipgloss.Style {
-	return theme.PriorityStyle(p)
+	return uitheme.Fg(priorityTheme.Priority(p))
 }
 
 func statusGlyph(s model.TaskStatus) string {

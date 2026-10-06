@@ -4,7 +4,7 @@ CLI task management tool with Markdown storage, usable by humans and AI agents.
 
 ## Tech Stack
 
-- Go (1.22+)
+- Go (1.26+)
 - `spf13/cobra` for CLI
 - `charmbracelet/bubbletea` + `bubbles` + `lipgloss` for the TUI
 - Markdown files as storage (no database)
@@ -29,7 +29,11 @@ go run ./cmd/tasks tui     # launch the TUI directly
 - `internal/board/` — Board service over a `Store`
 - `internal/export/` — JSON / CSV / summary exports
 - `internal/cli/` — Cobra commands; `SKILL.md` is embedded here via `go:embed`
-- `internal/tui/` — Bubble Tea Model / Update / View and modals
+- `internal/timeline/` — Gantt layout (bars, conflicts), no rendering
+- `internal/ui/` — renderers shared by the TUI and CLI output: `theme` (presets, contrast-tested), `icons`, `card` (card, detail), `tlgrid` (timeline grid), `dates`
+- `internal/tui/` — Bubble Tea app: `app.go` (model, writes, reload, frame), `board.go`, `timeline.go`, `overlay.go`, `form.go` (huh)
+
+Review UI changes as images: `UI_PREVIEW_DIR=/tmp/p go test -run TestPreview ./internal/tui/ ./internal/ui/...` writes ANSI frames; render them with `charmbracelet/freeze`.
 
 The canonical `SKILL.md` lives at the repo root. `make sync-skill` (and every `make build`/`test`) copies it into `internal/cli/SKILL.md` for embedding.
 

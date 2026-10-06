@@ -1,19 +1,20 @@
 package tui
 
 import (
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 
 	"github.com/GuitarWag/clitasks/internal/board"
 	"github.com/GuitarWag/clitasks/internal/storage"
+	"github.com/GuitarWag/clitasks/internal/ui"
 )
 
-func Run(filePath string) error {
+func Run(filePath string, opts ui.Options) error {
 	b, err := board.Open(storage.NewMarkdown(filePath))
 	if err != nil {
 		return err
 	}
-	m := newModel(b, filePath)
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	m := newModel(b, filePath, opts)
+	p := tea.NewProgram(m)
 	_, err = p.Run()
 	return err
 }

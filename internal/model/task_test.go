@@ -61,3 +61,9 @@ func TestParseDate(t *testing.T) {
 		assert.Error(t, err, s)
 	}
 }
+
+func TestCleanText(t *testing.T) {
+	evil := "Fix\x1b]52;c;cm0gLXJmIH4=\x07 bug\x1b[2J\tnow\u009b31m\x7f"
+	assert.Equal(t, "Fix]52;c;cm0gLXJmIH4= bug[2J now31m", CleanText(evil))
+	assert.Equal(t, "Ünïcødé ✓ 日本", CleanText("Ünïcødé ✓ 日本"))
+}

@@ -4,7 +4,7 @@ A command-line task management system that uses Markdown files as storage. Perfe
 
 ## Install
 
-Build from source (requires Go 1.22+):
+Build from source (requires Go 1.26+):
 
 ```bash
 git clone https://github.com/GuitarWag/clitasks.git
@@ -55,31 +55,42 @@ tasks codex
 - **Rich task metadata**: Priority, assignee, tags, start and due dates, dependencies, descriptions
 - **Timeline**: Gantt chart in the CLI and the TUI, and Mermaid export
 - **CLI interface**: Fast and efficient command-line operations
-- **Interactive TUI**: Beautiful terminal UI with keyboard navigation
-- **Real-time filtering**: Search tasks across all columns instantly
-- **Quick actions**: Keyboard shortcuts for common operations
+- **Interactive TUI**: Board and timeline screens, search, command palette, mouse support and live reload
+- **Themes**: Four presets for dark and light terminals, chosen from the terminal background
 - **AI-friendly**: Both humans and AI agents can read and edit the same task board
 - **Portable**: No database required, just a simple Markdown file
 
 ## Usage
 
-### Interactive TUI (Recommended for Daily Use)
-
-Launch the beautiful Terminal UI for visual task management:
+### Interactive TUI
 
 ```bash
 tasks tui
 ```
 
-Features:
-- 📊 **Column-based kanban view** with color coding
-- ⌨️ **Keyboard navigation** with arrow keys or Vim-style (hjkl)
-- ✏️ **In-place editing** of tasks
-- 🔍 **Real-time filtering** across all columns
-- ⚡ **Quick actions** menu for status changes
-- 📋 **Task details** shown on selection
+![Board](docs/img/board.png)
 
-See [TUI_GUIDE.md](TUI_GUIDE.md) for complete documentation.
+- A kanban board of cards with priority, due and assignee chips, and a detail pane that follows the selection.
+- A timeline (Gantt) screen with day, week and month zoom, grouping, dependency markers and date edits from the keyboard.
+- A form with date shortcuts (`+3d`, `fri`, `next week`) and a picker for the tasks a task waits for.
+- Search with tokens (`@bob #backend !high is:overdue due:<7d`), a command palette (`ctrl+k`) and mouse support.
+- Live reload when an agent or another program changes `tasks.md`.
+- Themes (Catppuccin Mocha and Latte, Tokyo Night, Nord) picked from the terminal background, and Nerd Font, Unicode or ASCII icons.
+
+![Timeline](docs/img/timeline.png)
+
+See [TUI_GUIDE.md](TUI_GUIDE.md) for every key and feature.
+
+### Appearance
+
+| Setting | Env var | Flag | Values |
+|---|---|---|---|
+| Theme | `TASKS_THEME` | `--theme` | `auto` (default), `catppuccin-mocha`, `catppuccin-latte`, `tokyo-night`, `nord`, `mono` |
+| Icons | `TASKS_ICONS` | `--icons` | `auto` (default), `nerd`, `unicode`, `ascii` |
+
+`NO_COLOR=1` turns colors off. The flags work on every command.
+
+On a terminal, `board`, `list`, `show`, `stats` and `timeline` print with the same cards and chart as the TUI. When the output goes to a pipe or a file (for example to an AI agent), they print plain text with ASCII icons and task IDs, in the same format as before.
 
 ### Command-Line Interface
 
