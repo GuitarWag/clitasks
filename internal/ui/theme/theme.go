@@ -11,7 +11,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 
-	"github.com/GuitarWag/clitasks/internal/model"
+	"github.com/GuitarWag/clitasks/v3/internal/model"
 )
 
 type Theme struct {

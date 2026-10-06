@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GuitarWag/clitasks/internal/model"
+	"github.com/GuitarWag/clitasks/v3/internal/model"
 )
 
 // Bar is one task on the chart. Start and End are dates (midnight UTC) and

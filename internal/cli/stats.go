@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GuitarWag/clitasks/internal/model"
-	uitheme "github.com/GuitarWag/clitasks/internal/ui/theme"
+	"github.com/GuitarWag/clitasks/v3/internal/model"
+	uitheme "github.com/GuitarWag/clitasks/v3/internal/ui/theme"
 )
 
 func newStatsCmd() *cobra.Command {

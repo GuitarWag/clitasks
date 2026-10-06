@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/GuitarWag/clitasks/internal/model"
-	"github.com/GuitarWag/clitasks/internal/storage"
+	"github.com/GuitarWag/clitasks/v3/internal/model"
+	"github.com/GuitarWag/clitasks/v3/internal/storage"
 )
 
 func newTestBoard(t *testing.T) *Board {

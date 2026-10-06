@@ -3,7 +3,7 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/GuitarWag/clitasks/internal/model"
+	"github.com/GuitarWag/clitasks/v3/internal/model"
 )
 
 func newStartCmd() *cobra.Command {

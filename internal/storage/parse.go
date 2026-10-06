@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GuitarWag/clitasks/internal/model"
+	"github.com/GuitarWag/clitasks/v3/internal/model"
 )
 
 var (

@@ -11,10 +11,10 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/stretchr/testify/require"
 
-	"github.com/GuitarWag/clitasks/internal/board"
-	"github.com/GuitarWag/clitasks/internal/model"
-	"github.com/GuitarWag/clitasks/internal/storage"
-	"github.com/GuitarWag/clitasks/internal/ui"
+	"github.com/GuitarWag/clitasks/v3/internal/board"
+	"github.com/GuitarWag/clitasks/v3/internal/model"
+	"github.com/GuitarWag/clitasks/v3/internal/storage"
+	"github.com/GuitarWag/clitasks/v3/internal/ui"
 )
 
 // demoBoard writes a realistic board and returns a model over it, at

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GuitarWag/clitasks/internal/model"
-	"github.com/GuitarWag/clitasks/internal/ui/dates"
+	"github.com/GuitarWag/clitasks/v3/internal/model"
+	"github.com/GuitarWag/clitasks/v3/internal/ui/dates"
 )
 
 // query is a parsed search. Free words must all appear in the title,

@@ -5,6 +5,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+
+	clitasks "github.com/GuitarWag/clitasks/v3"
 )
 
 func installSkill(tool string, global bool, out io.Writer) error {
@@ -23,7 +25,7 @@ func installSkill(tool string, global bool, out io.Writer) error {
 		return err
 	}
 	target := filepath.Join(dir, "SKILL.md")
-	if err := os.WriteFile(target, skillContent, 0o644); err != nil {
+	if err := os.WriteFile(target, clitasks.Skill, 0o644); err != nil {
 		return err
 	}
 

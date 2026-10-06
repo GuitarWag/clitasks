@@ -9,11 +9,11 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/spf13/cobra"
 
-	"github.com/GuitarWag/clitasks/internal/board"
-	"github.com/GuitarWag/clitasks/internal/model"
-	"github.com/GuitarWag/clitasks/internal/storage"
-	"github.com/GuitarWag/clitasks/internal/ui"
-	uitheme "github.com/GuitarWag/clitasks/internal/ui/theme"
+	"github.com/GuitarWag/clitasks/v3/internal/board"
+	"github.com/GuitarWag/clitasks/v3/internal/model"
+	"github.com/GuitarWag/clitasks/v3/internal/storage"
+	"github.com/GuitarWag/clitasks/v3/internal/ui"
+	uitheme "github.com/GuitarWag/clitasks/v3/internal/ui/theme"
 )
 
 func newRootCmd(version string) *cobra.Command {

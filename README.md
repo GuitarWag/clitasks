@@ -4,7 +4,13 @@ A command-line task management system that uses Markdown files as storage. Perfe
 
 ## Install
 
-Build from source (requires Go 1.26+):
+Install with Go 1.26 or newer:
+
+```bash
+go install github.com/GuitarWag/clitasks/v3/cmd/tasks@latest
+```
+
+Or build from source:
 
 ```bash
 git clone https://github.com/GuitarWag/clitasks.git
@@ -349,11 +355,8 @@ make lint          # golangci-lint
 make run ARGS="board"   # go run ./cmd/tasks board
 ```
 
-The canonical `SKILL.md` lives at the repo root and is embedded into the
-binary via `go:embed`. `make sync-skill` (run automatically by `make build`
-and `make test`) copies it into `internal/cli/SKILL.md`. If you run
-`go test ./...` directly on a clean checkout, run `make sync-skill` first
-so the embed file exists.
+`SKILL.md` at the repo root is embedded into the binary by the root package
+(`skill.go`), so `go build` and `go test ./...` work on a clean checkout.
 
 Layout:
 

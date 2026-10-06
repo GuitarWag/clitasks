@@ -3,8 +3,8 @@
 package ui
 
 import (
-	"github.com/GuitarWag/clitasks/internal/ui/icons"
-	"github.com/GuitarWag/clitasks/internal/ui/theme"
+	"github.com/GuitarWag/clitasks/v3/internal/ui/icons"
+	"github.com/GuitarWag/clitasks/v3/internal/ui/theme"
 )
 
 // Options are the user's look settings, from flags or env vars. Theme is

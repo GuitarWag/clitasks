@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1] - 2026-10-06
+
+### Fixed
+- `go install github.com/GuitarWag/clitasks/v3/cmd/tasks@latest` works. The module path now ends in `/v3`, which Go requires for v3 tags, and SKILL.md is embedded from the repository root, so a remote build no longer misses the file that `make` used to copy. `v3.0.0` cannot be installed with `go install`.
+- A binary from `go install` reports its module version instead of `dev`.
+
 ## [3.0.0] - 2026-10-06
 
 ### Changed
