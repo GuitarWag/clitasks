@@ -3,9 +3,9 @@ package tui
 import (
 	tea "charm.land/bubbletea/v2"
 
-	"github.com/GuitarWag/clitasks/internal/board"
-	"github.com/GuitarWag/clitasks/internal/storage"
-	"github.com/GuitarWag/clitasks/internal/ui"
+	"github.com/GuitarWag/clitasks/v3/internal/board"
+	"github.com/GuitarWag/clitasks/v3/internal/storage"
+	"github.com/GuitarWag/clitasks/v3/internal/ui"
 )
 
 func Run(filePath string, opts ui.Options) error {

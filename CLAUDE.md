@@ -12,7 +12,7 @@ CLI task management tool with Markdown storage, usable by humans and AI agents.
 ## Build & Dev
 
 ```bash
-make build         # build bin/tasks (runs `make sync-skill` first)
+make build         # build bin/tasks
 make test          # run all tests with -race
 make lint          # golangci-lint
 make install       # go install ./cmd/tasks
@@ -35,7 +35,7 @@ go run ./cmd/tasks tui     # launch the TUI directly
 
 Review UI changes as images: `UI_PREVIEW_DIR=/tmp/p go test -run TestPreview ./internal/tui/ ./internal/ui/...` writes ANSI frames; render them with `charmbracelet/freeze`.
 
-The canonical `SKILL.md` lives at the repo root. `make sync-skill` (and every `make build`/`test`) copies it into `internal/cli/SKILL.md` for embedding.
+The canonical `SKILL.md` lives at the repo root; `skill.go` (package `clitasks`) embeds it. The module path is `github.com/GuitarWag/clitasks/v3`.
 
 ## Git Rules
 

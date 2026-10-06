@@ -1,7 +1,7 @@
 ---
 id: 20261004-131735-embed-skill-md-from-a-canonical
 title: Embed SKILL.md from a canonical root copy
-status: accepted
+status: superseded
 date: 2026-05-17
 branch: main
 worktree: clitasks
@@ -12,7 +12,7 @@ affects:
   - internal/cli/skill.go
   - Makefile
 supersedes: []
-superseded_by: []
+superseded_by: [20261006-155510-embed-skill-md-from-a-root]
 depends_on: [20261004-131728-port-clitasks-from-typescript-to-go]
 journal_refs: []
 tags: [agents, build]

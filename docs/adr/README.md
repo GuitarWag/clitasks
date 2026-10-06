@@ -4,6 +4,7 @@
 
 | Record | Status | Date | Tags |
 |---|---|---|---|
+| [Embed SKILL.md from a root package and use the v3 module path](20261006-155510-embed-skill-md-from-a-root.md) | accepted | 2026-10-06 | build, release |
 | [Rebuild the TUI on Bubble Tea v2 with a themed component layer](20261005-213917-rebuild-the-tui-on-bubble-tea.md) | accepted | 2026-10-05 | tui, architecture |
 | [Compute one timeline layout for CLI, TUI and Mermaid](20261004-132518-compute-one-timeline-layout-for-cli.md) | accepted | 2026-10-04 | timeline, architecture |
 | [Add start and after fields to the task line](20261004-132518-add-start-and-after-fields-to.md) | accepted | 2026-10-04 | storage, timeline |
@@ -12,32 +13,35 @@
 | [Store the board in one Markdown file](20261004-131735-store-the-board-in-one-markdown.md) | accepted | 2026-05-16 | storage |
 | [Resolve the board file from flag, then env var, then tasks.md](20261004-131735-resolve-the-board-file-from-flag.md) | accepted | 2026-05-17 | cli |
 | [Generate task IDs from a base36 timestamp and a random suffix](20261004-131735-generate-task-ids-from-a-base36.md) | accepted | 2026-05-17 | storage |
-| [Embed SKILL.md from a canonical root copy](20261004-131735-embed-skill-md-from-a-canonical.md) | accepted | 2026-05-17 | agents, build |
+| [Embed SKILL.md from a canonical root copy](20261004-131735-embed-skill-md-from-a-canonical.md) | superseded | 2026-05-17 | agents, build |
 | [Port clitasks from TypeScript to Go](20261004-131728-port-clitasks-from-typescript-to-go.md) | accepted | 2026-05-16 | architecture, language |
 
 ## Graph
 
 ```mermaid
 graph TD
-  n0["Rebuild the TUI on Bubble Tea v2 with a themed component la…"]
-  n1["Compute one timeline layout for CLI, TUI and Mermaid"]
-  n2["Add start and after fields to the task line"]
-  n3["Write the board file atomically without a directory fsync"]
-  n4["Write exports with mode 0600"]
-  n5["Store the board in one Markdown file"]
-  n6["Resolve the board file from flag, then env var, then tasks.…"]
-  n7["Generate task IDs from a base36 timestamp and a random suff…"]
-  n8["Embed SKILL.md from a canonical root copy"]
-  n9["Port clitasks from TypeScript to Go"]
-  n0 --> n1
-  n0 --> n9
+  n0["Embed SKILL.md from a root package and use the v3 module pa…"]
+  n1["Rebuild the TUI on Bubble Tea v2 with a themed component la…"]
+  n2["Compute one timeline layout for CLI, TUI and Mermaid"]
+  n3["Add start and after fields to the task line"]
+  n4["Write the board file atomically without a directory fsync"]
+  n5["Write exports with mode 0600"]
+  n6["Store the board in one Markdown file"]
+  n7["Resolve the board file from flag, then env var, then tasks.…"]
+  n8["Generate task IDs from a base36 timestamp and a random suff…"]
+  n9["Embed SKILL.md from a canonical root copy"]
+  n10["Port clitasks from TypeScript to Go"]
+  n0 -. supersedes .-> n9
+  n1 --> n10
   n1 --> n2
-  n2 --> n5
-  n3 --> n5
-  n3 --> n9
-  n4 --> n9
-  n5 --> n9
-  n6 --> n9
-  n7 --> n9
-  n8 --> n9
+  n2 --> n3
+  n3 --> n6
+  n4 --> n10
+  n4 --> n6
+  n5 --> n10
+  n6 --> n10
+  n7 --> n10
+  n8 --> n10
+  n9 --> n10
+  style n9 stroke-dasharray: 4
 ```

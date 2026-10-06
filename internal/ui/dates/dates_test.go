@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/GuitarWag/clitasks/internal/model"
+	"github.com/GuitarWag/clitasks/v3/internal/model"
 )
 
 // Thursday 2026-10-08, local noon.

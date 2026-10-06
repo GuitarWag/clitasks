@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GuitarWag/clitasks/internal/board"
-	"github.com/GuitarWag/clitasks/internal/model"
+	"github.com/GuitarWag/clitasks/v3/internal/board"
+	"github.com/GuitarWag/clitasks/v3/internal/model"
 )
 
 func runMove(cmd *cobra.Command, id string, s model.TaskStatus, successPrefix string, style func(string) string) error {

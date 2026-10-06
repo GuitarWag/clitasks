@@ -10,12 +10,12 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/ansi"
 
-	"github.com/GuitarWag/clitasks/internal/export"
-	"github.com/GuitarWag/clitasks/internal/model"
-	"github.com/GuitarWag/clitasks/internal/ui/card"
-	"github.com/GuitarWag/clitasks/internal/ui/icons"
-	"github.com/GuitarWag/clitasks/internal/ui/theme"
-	"github.com/GuitarWag/clitasks/internal/ui/tlgrid"
+	"github.com/GuitarWag/clitasks/v3/internal/export"
+	"github.com/GuitarWag/clitasks/v3/internal/model"
+	"github.com/GuitarWag/clitasks/v3/internal/ui/card"
+	"github.com/GuitarWag/clitasks/v3/internal/ui/icons"
+	"github.com/GuitarWag/clitasks/v3/internal/ui/theme"
+	"github.com/GuitarWag/clitasks/v3/internal/ui/tlgrid"
 )
 
 func esc(msg tea.Msg) bool {

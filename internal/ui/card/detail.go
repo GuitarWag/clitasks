@@ -8,9 +8,9 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
 
-	"github.com/GuitarWag/clitasks/internal/model"
-	"github.com/GuitarWag/clitasks/internal/timeline"
-	"github.com/GuitarWag/clitasks/internal/ui/dates"
+	"github.com/GuitarWag/clitasks/v3/internal/model"
+	"github.com/GuitarWag/clitasks/v3/internal/timeline"
+	"github.com/GuitarWag/clitasks/v3/internal/ui/dates"
 )
 
 // Related is the dependency context of one task.

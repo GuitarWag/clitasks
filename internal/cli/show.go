@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GuitarWag/clitasks/internal/ui/card"
+	"github.com/GuitarWag/clitasks/v3/internal/ui/card"
 )
 
 func newShowCmd() *cobra.Command {

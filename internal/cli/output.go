@@ -13,14 +13,14 @@ import (
 	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 
-	"github.com/GuitarWag/clitasks/internal/model"
-	"github.com/GuitarWag/clitasks/internal/timeline"
-	"github.com/GuitarWag/clitasks/internal/ui"
-	"github.com/GuitarWag/clitasks/internal/ui/card"
-	"github.com/GuitarWag/clitasks/internal/ui/dates"
-	"github.com/GuitarWag/clitasks/internal/ui/icons"
-	"github.com/GuitarWag/clitasks/internal/ui/theme"
-	"github.com/GuitarWag/clitasks/internal/ui/tlgrid"
+	"github.com/GuitarWag/clitasks/v3/internal/model"
+	"github.com/GuitarWag/clitasks/v3/internal/timeline"
+	"github.com/GuitarWag/clitasks/v3/internal/ui"
+	"github.com/GuitarWag/clitasks/v3/internal/ui/card"
+	"github.com/GuitarWag/clitasks/v3/internal/ui/dates"
+	"github.com/GuitarWag/clitasks/v3/internal/ui/icons"
+	"github.com/GuitarWag/clitasks/v3/internal/ui/theme"
+	"github.com/GuitarWag/clitasks/v3/internal/ui/tlgrid"
 )
 
 // output describes where a command prints. rich is true for a terminal:

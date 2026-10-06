@@ -7,8 +7,8 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
-	"github.com/GuitarWag/clitasks/internal/board"
-	"github.com/GuitarWag/clitasks/internal/model"
+	"github.com/GuitarWag/clitasks/v3/internal/board"
+	"github.com/GuitarWag/clitasks/v3/internal/model"
 )
 
 // bigModel is the demo board plus n generated tasks with dates and links.
