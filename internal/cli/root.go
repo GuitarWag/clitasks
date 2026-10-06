@@ -14,6 +14,8 @@ import (
 	"github.com/GuitarWag/clitasks/internal/model"
 	"github.com/GuitarWag/clitasks/internal/storage"
 	"github.com/GuitarWag/clitasks/internal/theme"
+	"github.com/GuitarWag/clitasks/internal/ui"
+	uitheme "github.com/GuitarWag/clitasks/internal/ui/theme"
 )
 
 func newRootCmd(version string) *cobra.Command {
@@ -32,6 +34,10 @@ func newRootCmd(version string) *cobra.Command {
 	}
 	root.PersistentFlags().StringP("file", "f", "",
 		"Path to the markdown file (default: $TASK_BOARD_FILE or tasks.md)")
+	root.PersistentFlags().String("theme", "",
+		"Color theme: "+strings.Join(uitheme.Names(), "|")+" (default: $TASKS_THEME or auto)")
+	root.PersistentFlags().String("icons", "",
+		"Icon set: auto|nerd|unicode|ascii (default: $TASKS_ICONS or auto)")
 
 	root.AddCommand(
 		newInitCmd(), newAddCmd(), newListCmd(), newBoardCmd(), newShowCmd(),
@@ -60,6 +66,18 @@ func resolveFilePath(cmd *cobra.Command) string {
 		return v
 	}
 	return storage.DefaultFile
+}
+
+// lookOptions merges the --theme and --icons flags over the env vars.
+func lookOptions(cmd *cobra.Command) (ui.Options, error) {
+	o := ui.OptionsFromEnv(os.Getenv)
+	if v, _ := cmd.Flags().GetString("theme"); v != "" {
+		o.Theme = v
+	}
+	if v, _ := cmd.Flags().GetString("icons"); v != "" {
+		o.Icons = v
+	}
+	return o, o.Validate()
 }
 
 func openBoard(cmd *cobra.Command) (*board.Board, error) {

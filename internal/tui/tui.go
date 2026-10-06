@@ -5,14 +5,17 @@ import (
 
 	"github.com/GuitarWag/clitasks/internal/board"
 	"github.com/GuitarWag/clitasks/internal/storage"
+	"github.com/GuitarWag/clitasks/internal/ui"
 )
 
-func Run(filePath string) error {
+func Run(filePath string, opts ui.Options) error {
 	b, err := board.Open(storage.NewMarkdown(filePath))
 	if err != nil {
 		return err
 	}
 	m := newModel(b, filePath)
+	m.opts = opts
+	m.look = opts.Resolve(true)
 	p := tea.NewProgram(m)
 	_, err = p.Run()
 	return err

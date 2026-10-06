@@ -14,6 +14,7 @@ import (
 	"github.com/GuitarWag/clitasks/internal/model"
 	"github.com/GuitarWag/clitasks/internal/storage"
 	"github.com/GuitarWag/clitasks/internal/timeline"
+	"github.com/GuitarWag/clitasks/internal/ui"
 )
 
 type mode int
@@ -63,6 +64,11 @@ type Model struct {
 	tlFrom       time.Time
 	tlScale      timeline.Scale
 	now          func() time.Time
+
+	// opts are the look settings; look is resolved from them once the
+	// terminal reports its background color.
+	opts ui.Options
+	look ui.Look
 
 	keys   keyMap
 	styles styles
