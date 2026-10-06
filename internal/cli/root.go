@@ -6,7 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
+	"github.com/charmbracelet/colorprofile"
 	"github.com/spf13/cobra"
 
 	"github.com/GuitarWag/clitasks/internal/board"
@@ -22,6 +23,12 @@ func newRootCmd(version string) *cobra.Command {
 		Version:       version,
 		SilenceUsage:  true,
 		SilenceErrors: false,
+		// Lip Gloss v2 always emits full color. The writer downsamples it to
+		// what the output supports and strips it for pipes and NO_COLOR.
+		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
+			r := cmd.Root()
+			r.SetOut(colorprofile.NewWriter(r.OutOrStdout(), os.Environ()))
+		},
 	}
 	root.PersistentFlags().StringP("file", "f", "",
 		"Path to the markdown file (default: $TASK_BOARD_FILE or tasks.md)")

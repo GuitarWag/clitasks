@@ -1,7 +1,7 @@
 package tui
 
 import (
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 
 	"github.com/GuitarWag/clitasks/internal/board"
 	"github.com/GuitarWag/clitasks/internal/storage"
@@ -13,7 +13,7 @@ func Run(filePath string) error {
 		return err
 	}
 	m := newModel(b, filePath)
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	p := tea.NewProgram(m)
 	_, err = p.Run()
 	return err
 }

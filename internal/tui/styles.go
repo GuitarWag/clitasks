@@ -1,7 +1,7 @@
 package tui
 
 import (
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 
 	"github.com/GuitarWag/clitasks/internal/model"
 	"github.com/GuitarWag/clitasks/internal/theme"

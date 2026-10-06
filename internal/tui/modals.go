@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 
 	"github.com/GuitarWag/clitasks/internal/board"
 	"github.com/GuitarWag/clitasks/internal/model"
@@ -54,7 +54,7 @@ func makeFields(title, desc, prio, assn, tags, due, start string) []formField {
 		ti.Placeholder = placeholder
 		ti.SetValue(val)
 		ti.CharLimit = 256
-		ti.Width = 60
+		ti.SetWidth(60)
 		return formField{label: label, input: ti}
 	}
 	return []formField{
@@ -77,7 +77,7 @@ func (f *taskForm) focusFirst() tea.Cmd {
 }
 
 func (m Model) updateForm(msg tea.Msg) (tea.Model, tea.Cmd) {
-	km, ok := msg.(tea.KeyMsg)
+	km, ok := msg.(tea.KeyPressMsg)
 	if !ok {
 		return m, nil
 	}
@@ -202,7 +202,7 @@ func (m Model) viewForm() string {
 // --- delete ---
 
 func (m Model) updateDelete(msg tea.Msg) (tea.Model, tea.Cmd) {
-	km, ok := msg.(tea.KeyMsg)
+	km, ok := msg.(tea.KeyPressMsg)
 	if !ok {
 		return m, nil
 	}
@@ -234,7 +234,7 @@ func (m Model) viewDelete() string {
 // --- status menu ---
 
 func (m Model) updateStatusMenu(msg tea.Msg) (tea.Model, tea.Cmd) {
-	km, ok := msg.(tea.KeyMsg)
+	km, ok := msg.(tea.KeyPressMsg)
 	if !ok {
 		return m, nil
 	}
@@ -284,7 +284,7 @@ func (m Model) viewStatusMenu() string {
 // --- filter ---
 
 func (m Model) updateFilter(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if km, ok := msg.(tea.KeyMsg); ok {
+	if km, ok := msg.(tea.KeyPressMsg); ok {
 		switch km.String() {
 		case "esc":
 			m.filterIn.SetValue("")
@@ -317,7 +317,7 @@ func (m Model) viewFilter() string {
 // --- help ---
 
 func (m Model) updateHelp(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if km, ok := msg.(tea.KeyMsg); ok {
+	if km, ok := msg.(tea.KeyPressMsg); ok {
 		switch km.String() {
 		case "esc", "q", "?":
 			m.mode = modeBoard

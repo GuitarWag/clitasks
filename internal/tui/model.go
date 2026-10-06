@@ -5,10 +5,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/key"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 
 	"github.com/GuitarWag/clitasks/internal/board"
 	"github.com/GuitarWag/clitasks/internal/model"
@@ -183,7 +183,7 @@ func (m *Model) clampSelection() {
 }
 
 func (m Model) updateBoard(msg tea.Msg) (tea.Model, tea.Cmd) {
-	km, ok := msg.(tea.KeyMsg)
+	km, ok := msg.(tea.KeyPressMsg)
 	if !ok {
 		return m, nil
 	}
@@ -254,7 +254,13 @@ func (m Model) updateBoard(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // --- view ---
 
-func (m Model) View() string {
+func (m Model) View() tea.View {
+	v := tea.NewView(m.render())
+	v.AltScreen = true
+	return v
+}
+
+func (m Model) render() string {
 	switch m.mode {
 	case modeAdd, modeEdit:
 		return m.viewForm()

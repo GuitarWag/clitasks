@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/key"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/key"
+	tea "charm.land/bubbletea/v2"
 
 	"github.com/GuitarWag/clitasks/internal/theme"
 	"github.com/GuitarWag/clitasks/internal/timeline"
@@ -34,7 +34,7 @@ func (m Model) timelineASCII(l timeline.Layout) timeline.ASCII {
 }
 
 func (m Model) updateTimeline(msg tea.Msg) (tea.Model, tea.Cmd) {
-	km, ok := msg.(tea.KeyMsg)
+	km, ok := msg.(tea.KeyPressMsg)
 	if !ok {
 		return m, nil
 	}

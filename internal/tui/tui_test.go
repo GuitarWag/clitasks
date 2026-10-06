@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -27,27 +27,28 @@ func setupBoard(t *testing.T) (*board.Board, string) {
 	return b, p
 }
 
-func k(s string) tea.KeyMsg {
+func k(s string) tea.KeyPressMsg {
 	switch s {
 	case "esc":
-		return tea.KeyMsg{Type: tea.KeyEsc}
+		return tea.KeyPressMsg{Code: tea.KeyEscape}
 	case "enter":
-		return tea.KeyMsg{Type: tea.KeyEnter}
+		return tea.KeyPressMsg{Code: tea.KeyEnter}
 	case "up":
-		return tea.KeyMsg{Type: tea.KeyUp}
+		return tea.KeyPressMsg{Code: tea.KeyUp}
 	case "down":
-		return tea.KeyMsg{Type: tea.KeyDown}
+		return tea.KeyPressMsg{Code: tea.KeyDown}
 	case "left":
-		return tea.KeyMsg{Type: tea.KeyLeft}
+		return tea.KeyPressMsg{Code: tea.KeyLeft}
 	case "right":
-		return tea.KeyMsg{Type: tea.KeyRight}
+		return tea.KeyPressMsg{Code: tea.KeyRight}
 	case "tab":
-		return tea.KeyMsg{Type: tea.KeyTab}
+		return tea.KeyPressMsg{Code: tea.KeyTab}
 	}
-	return tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(s)}
+	r := []rune(s)
+	return tea.KeyPressMsg{Code: r[0], Text: s}
 }
 
-func send(m Model, k tea.KeyMsg) Model {
+func send(m Model, k tea.KeyPressMsg) Model {
 	mm, _ := m.Update(k)
 	return mm.(Model)
 }
@@ -55,7 +56,7 @@ func send(m Model, k tea.KeyMsg) Model {
 func TestView_emptyBoard(t *testing.T) {
 	b, p := setupBoard(t)
 	m := newModel(b, p)
-	out := m.View()
+	out := m.render()
 	assert.Contains(t, out, "My Board")
 	assert.Contains(t, out, "TODO (0)")
 	assert.Contains(t, out, "IN PROGRESS (0)")
@@ -70,7 +71,7 @@ func TestView_withTasks(t *testing.T) {
 	_, _ = b.Add("second", board.AddInput{Priority: model.PriorityHigh, Assignee: "alice"})
 	m := newModel(b, p)
 
-	out := m.View()
+	out := m.render()
 	assert.Contains(t, out, "TODO (2)")
 	assert.Contains(t, out, "first task")
 	assert.Contains(t, out, "second")
@@ -207,7 +208,7 @@ func TestFilter_modalAndClear(t *testing.T) {
 	m.filterIn.SetValue("alph")
 	m = send(m, k("enter"))
 	assert.Equal(t, "alph", m.filter)
-	view := m.View()
+	view := m.render()
 	assert.Contains(t, view, "alpha")
 	assert.NotContains(t, view, "beta")
 
@@ -220,7 +221,7 @@ func TestHelp_modal(t *testing.T) {
 	m := newModel(b, p)
 	m = send(m, k("?"))
 	assert.Equal(t, modeHelp, m.mode)
-	assert.Contains(t, m.View(), "Keybindings")
+	assert.Contains(t, m.render(), "Keybindings")
 	m = send(m, k("esc"))
 	assert.Equal(t, modeBoard, m.mode)
 }
@@ -245,7 +246,7 @@ func TestRenderColumn_taskCountInTitle(t *testing.T) {
 	_, _ = b.Add("b", board.AddInput{})
 
 	m := newModel(b, p)
-	v := m.View()
+	v := m.render()
 	assert.Contains(t, v, "TODO (1)")
 	assert.Contains(t, v, "DONE (1)")
 }
@@ -253,7 +254,7 @@ func TestRenderColumn_taskCountInTitle(t *testing.T) {
 func TestView_helpFooterShown(t *testing.T) {
 	b, p := setupBoard(t)
 	m := newModel(b, p)
-	v := m.View()
+	v := m.render()
 	assert.Contains(t, v, "a add")
 	assert.Contains(t, v, "q quit")
 }
@@ -267,11 +268,11 @@ func TestForm_tabNavigation(t *testing.T) {
 	m = send(m, k("tab"))
 	assert.Equal(t, 1, m.form.step)
 
-	m = send(m, tea.KeyMsg{Type: tea.KeyShiftTab})
+	m = send(m, tea.KeyPressMsg{Code: tea.KeyTab, Mod: tea.ModShift})
 	assert.Equal(t, 0, m.form.step)
 
 	// wrap backwards from step 0
-	m = send(m, tea.KeyMsg{Type: tea.KeyShiftTab})
+	m = send(m, tea.KeyPressMsg{Code: tea.KeyTab, Mod: tea.ModShift})
 	assert.Equal(t, len(m.form.fields)-1, m.form.step)
 }
 
@@ -283,7 +284,7 @@ func TestFilter_noMatches(t *testing.T) {
 	m.filterIn.SetValue("zzz")
 	m = send(m, k("enter"))
 
-	view := m.View()
+	view := m.render()
 	assert.Contains(t, view, "TODO (0)")
 	assert.Contains(t, view, "(empty)", "no-match column should render empty placeholder")
 }
@@ -297,7 +298,7 @@ func TestWindowResize_changesLayout(t *testing.T) {
 	assert.Equal(t, 200, m.width)
 	assert.Equal(t, 50, m.height)
 	// View should not panic at the new size.
-	assert.NotEmpty(t, m.View())
+	assert.NotEmpty(t, m.render())
 }
 
 func TestSubmitForm_invalidPriority(t *testing.T) {
@@ -331,7 +332,7 @@ func TestTimeline_toggleAndView(t *testing.T) {
 	m = send(m, k("t"))
 	require.True(t, m.showTimeline)
 
-	out := m.View()
+	out := m.render()
 	assert.Contains(t, out, tasks[0].ID+" design")
 	assert.Contains(t, out, "█████")
 	assert.Contains(t, out, "1 column = 1 day")
@@ -339,7 +340,7 @@ func TestTimeline_toggleAndView(t *testing.T) {
 
 	m = send(m, k("t"))
 	assert.False(t, m.showTimeline)
-	assert.Contains(t, m.View(), "TODO (2)")
+	assert.Contains(t, m.render(), "TODO (2)")
 
 	m = send(m, k("t"))
 	m = send(m, k("esc"))
@@ -401,7 +402,7 @@ func TestTimeline_resizeLimitsRows(t *testing.T) {
 	for range 11 {
 		m = send(m, k("j"))
 	}
-	assert.Contains(t, m.View(), "rows 10-12 of 12")
+	assert.Contains(t, m.render(), "rows 10-12 of 12")
 }
 
 func TestForm_rejectsBadDate(t *testing.T) {

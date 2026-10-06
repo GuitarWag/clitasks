@@ -1,12 +1,14 @@
 package theme
 
 import (
-	"github.com/charmbracelet/lipgloss"
+	"image/color"
+
+	"charm.land/lipgloss/v2"
 
 	"github.com/GuitarWag/clitasks/internal/model"
 )
 
-const (
+var (
 	ColorError   = lipgloss.Color("1")
 	ColorSuccess = lipgloss.Color("2")
 	ColorWarn    = lipgloss.Color("3")
@@ -40,7 +42,7 @@ var (
 	Gray    = lipgloss.NewStyle().Foreground(ColorGray)
 )
 
-func PriorityColor(p model.TaskPriority) lipgloss.Color {
+func PriorityColor(p model.TaskPriority) color.Color {
 	switch p {
 	case model.PriorityCritical:
 		return ColorPriorityCritical
