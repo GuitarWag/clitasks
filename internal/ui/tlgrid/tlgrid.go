@@ -80,6 +80,9 @@ type Opts struct {
 	Highlight []string
 	// Offset and Height select a window of rows. Height <= 0 shows all rows.
 	Offset, Height int
+	// ShowID puts the task ID before the title, for output people copy IDs
+	// from. The label column grows to fit it.
+	ShowID bool
 }
 
 type Output struct {
@@ -246,6 +249,9 @@ func Render(l timeline.Layout, rows []Row, c card.Ctx, o Opts) Output {
 	}
 	from = Align(from, zoom)
 	lw := LabelWidth(o.Width)
+	if o.ShowID {
+		lw = min(lw+15, o.Width/2)
+	}
 	cw := max(o.Width-lw-1, 1)
 	g := &grid{from: from, zoom: zoom, cols: cw, today: timeline.Day(c.Now), painter: map[cellStyle]lipgloss.Style{}, c: c}
 	_, to := g.colDays(cw - 1)
@@ -277,23 +283,44 @@ func Render(l timeline.Layout, rows []Row, c card.Ctx, o Opts) Output {
 
 func (g *grid) monthHeader() string {
 	th := g.c.Look.Theme
-	ln := &line{g: g}
-	lastYear, nextFree := 0, 0
-	for c := 0; c < g.cols; {
+	// Find the first column of each month in view.
+	type mark struct {
+		col int
+		day time.Time
+	}
+	var marks []mark
+	for c := 0; c < g.cols; c += colsPerUnit(g.zoom) {
 		s, _ := g.colDays(c)
 		prev, _ := g.colDays(c - colsPerUnit(g.zoom))
-		if (c == 0 || s.Month() != prev.Month()) && c >= nextFree {
-			label := s.Format("Jan")
-			if s.Year() != lastYear {
-				label = s.Format("Jan 2006")
-				lastYear = s.Year()
-			}
-			if c+ansi.StringWidth(label) <= g.cols {
-				ln.put(label, th.Subtext, th.Base, true)
-				c += ansi.StringWidth(label)
-				nextFree = c + 1
-				continue
-			}
+		if c == 0 || s.Month() != prev.Month() {
+			marks = append(marks, mark{c, s})
+		}
+	}
+	// Each label must end before the next month starts: the long form with
+	// the year where the year changes, else the short form, else nothing.
+	labels := map[int]string{}
+	lastYear := 0
+	for i, mk := range marks {
+		end := g.cols
+		if i+1 < len(marks) {
+			end = marks[i+1].col - 1
+		}
+		room := end - mk.col
+		long, short := mk.day.Format("Jan 2006"), mk.day.Format("Jan")
+		switch {
+		case mk.day.Year() != lastYear && len(long) <= room:
+			labels[mk.col] = long
+			lastYear = mk.day.Year()
+		case len(short) <= room:
+			labels[mk.col] = short
+		}
+	}
+	ln := &line{g: g}
+	for c := 0; c < g.cols; {
+		if l, ok := labels[c]; ok {
+			ln.put(l, th.Subtext, th.Base, true)
+			c += len(l)
+			continue
 		}
 		ln.put(" ", th.Subtext, th.Base, false)
 		c++
@@ -385,8 +412,13 @@ func (g *grid) barRow(b timeline.Bar, selected bool, lw int, o Opts) string {
 	if t.Status == model.StatusDone && !selected {
 		titleStyle = p.Fg(th.Subtext)
 	}
+	id := ""
+	if o.ShowID {
+		id = p.Fg(th.Muted).Render(t.ID + " ")
+		titleW -= ansi.StringWidth(t.ID) + 1
+	}
 	label := p.Fg(th.Accent).Render(edge) +
-		p.Fg(th.Status(t.Status)).Render(ic.Status(t.Status)) + p.Style().Render(" ") +
+		p.Fg(th.Status(t.Status)).Render(ic.Status(t.Status)) + p.Style().Render(" ") + id +
 		card.Mark(ansi.Truncate(t.Title, titleW, "…"), o.Highlight, titleStyle, p.Style().Foreground(th.Base).Background(th.Warn))
 	mw := ansi.StringWidth(marker)
 	if mw > 0 {

@@ -112,3 +112,12 @@ func TestAlignAndStep(t *testing.T) {
 	assert.Equal(t, 1, Step(ZoomDay))
 	assert.Equal(t, ZoomDay, ZoomMonth.Next())
 }
+
+// A chart that starts on the last day of a month still names the next month.
+func TestRender_monthLabelAtMonthEnd(t *testing.T) {
+	l := timeline.Build([]model.Task{{ID: "x", Start: "2026-06-01", DueDate: "2026-06-10"}}, now)
+	out := Render(l, BarRows(l), ctx("mono"), Opts{Width: 120, Zoom: ZoomDay})
+	head := plain(out)[0]
+	assert.Contains(t, head, "Jun 2026")
+	assert.NotContains(t, head, "May 2026", "one day of May has no room for its long label")
+}

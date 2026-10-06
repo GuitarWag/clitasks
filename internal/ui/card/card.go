@@ -33,6 +33,8 @@ type Opts struct {
 	Waiting bool
 	// Conflict is true when the timeline has an after conflict for the task.
 	Conflict bool
+	// ShowID adds the task ID as a last line, for output people copy IDs from.
+	ShowID bool
 }
 
 // Painter builds styled segments on one background color, so a line has no
@@ -115,6 +117,9 @@ func Card(t model.Task, c Ctx, o Opts) string {
 			tags = append(tags, ic.Tag+tg)
 		}
 		lines = append(lines, line(p.Fg(th.Muted).Render(strings.Join(tags, " "))))
+	}
+	if o.ShowID {
+		lines = append(lines, line(p.Fg(th.Overlay1).Render(t.ID)))
 	}
 	return strings.Join(lines, "\n")
 }

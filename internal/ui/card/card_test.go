@@ -76,3 +76,9 @@ func TestDetail_content(t *testing.T) {
 		assert.Contains(t, out, want)
 	}
 }
+
+func TestCard_showID(t *testing.T) {
+	out := ansi.Strip(Card(long, ctx("nord"), Opts{Width: 34, ShowID: true}))
+	lines := strings.Split(out, "\n")
+	assert.Contains(t, lines[len(lines)-1], "T-1")
+}

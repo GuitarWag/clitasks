@@ -7,13 +7,11 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
-	"github.com/charmbracelet/colorprofile"
 	"github.com/spf13/cobra"
 
 	"github.com/GuitarWag/clitasks/internal/board"
 	"github.com/GuitarWag/clitasks/internal/model"
 	"github.com/GuitarWag/clitasks/internal/storage"
-	"github.com/GuitarWag/clitasks/internal/theme"
 	"github.com/GuitarWag/clitasks/internal/ui"
 	uitheme "github.com/GuitarWag/clitasks/internal/ui/theme"
 )
@@ -25,12 +23,10 @@ func newRootCmd(version string) *cobra.Command {
 		Version:       version,
 		SilenceUsage:  true,
 		SilenceErrors: false,
-		// Lip Gloss v2 always emits full color. The writer downsamples it to
-		// what the output supports and strips it for pipes and NO_COLOR.
-		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
-			r := cmd.Root()
-			r.SetOut(colorprofile.NewWriter(r.OutOrStdout(), os.Environ()))
-		},
+		// setupOutput picks rich or plain output and the theme. Lip Gloss v2
+		// always emits full color; the writer it installs downsamples it and
+		// strips it for pipes and NO_COLOR.
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error { return setupOutput(cmd) },
 	}
 	root.PersistentFlags().StringP("file", "f", "",
 		"Path to the markdown file (default: $TASK_BOARD_FILE or tasks.md)")
@@ -99,23 +95,15 @@ func splitTags(s string) []string {
 	return out
 }
 
+// Plain-output styles. applyLook sets them from the theme before a command runs.
 var (
-	styleSuccess = theme.Success
-	styleError   = theme.Error
-	styleWarn    = theme.Warn
-	styleDim     = theme.Dim
-	styleBold    = theme.Bold
-	styleCyan    = theme.Cyan
-	styleGreen   = theme.Green
-	styleYellow  = theme.Yellow
-	styleBlue    = theme.Blue
-	styleMagenta = theme.Magenta
-	styleRed     = theme.Red
-	styleGray    = theme.Gray
+	styleSuccess, styleError, styleWarn, styleDim, styleBold lipgloss.Style
+	styleCyan, styleGreen, styleYellow, styleBlue            lipgloss.Style
+	styleMagenta, styleRed, styleGray                        lipgloss.Style
 )
 
 func priorityStyle(p model.TaskPriority) lipgloss.Style {
-	return theme.PriorityStyle(p)
+	return uitheme.Fg(priorityTheme.Priority(p))
 }
 
 func statusGlyph(s model.TaskStatus) string {

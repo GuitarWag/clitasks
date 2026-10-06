@@ -22,6 +22,10 @@ func newBoardCmd() *cobra.Command {
 			info := b.Info()
 			by := b.ByStatus()
 			out := cmd.OutOrStdout()
+			if o := outputOf(cmd); o.rich {
+				richBoard(out, o, info, by)
+				return nil
+			}
 
 			fmt.Fprintln(out, styleBold.Render(styleCyan.Render("\n# "+info.Name)))
 			if info.Description != "" {

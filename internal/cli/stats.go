@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/GuitarWag/clitasks/internal/model"
+	uitheme "github.com/GuitarWag/clitasks/internal/ui/theme"
 )
 
 func newStatsCmd() *cobra.Command {
@@ -27,10 +28,20 @@ func newStatsCmd() *cobra.Command {
 			fmt.Fprintln(out)
 
 			fmt.Fprintln(out, styleBold.Render("Status Breakdown:"))
-			fmt.Fprintf(out, "  TODO:        %s\n", styleYellow.Render(fmt.Sprintf("%d", len(by[model.StatusTodo]))))
-			fmt.Fprintf(out, "  IN PROGRESS: %s\n", styleBlue.Render(fmt.Sprintf("%d", len(by[model.StatusInProgress]))))
-			fmt.Fprintf(out, "  DONE:        %s\n", styleGreen.Render(fmt.Sprintf("%d", len(by[model.StatusDone]))))
-			fmt.Fprintf(out, "  BLOCKED:     %s\n", styleRed.Render(fmt.Sprintf("%d", len(by[model.StatusBlocked]))))
+			o := outputOf(cmd)
+			total := len(info.Tasks)
+			row := func(label string, n int, st model.TaskStatus) {
+				c := uitheme.Fg(o.look.Theme.Status(st))
+				fmt.Fprintf(out, "  %-12s %s", label+":", c.Render(fmt.Sprintf("%-3d", n)))
+				if o.rich {
+					fmt.Fprint(out, " "+bar(n, total, 30, c))
+				}
+				fmt.Fprintln(out)
+			}
+			row("TODO", len(by[model.StatusTodo]), model.StatusTodo)
+			row("IN PROGRESS", len(by[model.StatusInProgress]), model.StatusInProgress)
+			row("DONE", len(by[model.StatusDone]), model.StatusDone)
+			row("BLOCKED", len(by[model.StatusBlocked]), model.StatusBlocked)
 			fmt.Fprintln(out, "  "+styleDim.Render("──────────────"))
 			fmt.Fprintf(out, "  Total:       %s\n\n", styleCyan.Render(fmt.Sprintf("%d", len(info.Tasks))))
 
