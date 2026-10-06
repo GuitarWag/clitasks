@@ -380,7 +380,7 @@ func (g *grid) barRow(b timeline.Bar, selected bool, lw int, o Opts) string {
 	case o.Related[t.ID]:
 		marker, markerFg = ic.After, th.Accent
 	}
-	titleW := lw - 4 - ansi.StringWidth(marker)
+	titleW := lw - 6 - ansi.StringWidth(marker)
 	titleStyle := p.Fg(th.Text).Bold(selected)
 	if t.Status == model.StatusDone && !selected {
 		titleStyle = p.Fg(th.Subtext)
@@ -388,7 +388,12 @@ func (g *grid) barRow(b timeline.Bar, selected bool, lw int, o Opts) string {
 	label := p.Fg(th.Accent).Render(edge) +
 		p.Fg(th.Status(t.Status)).Render(ic.Status(t.Status)) + p.Style().Render(" ") +
 		card.Mark(ansi.Truncate(t.Title, titleW, "…"), o.Highlight, titleStyle, p.Style().Foreground(th.Base).Background(th.Warn))
-	label = p.Pad(label, lw-ansi.StringWidth(marker)-1) + p.Fg(markerFg).Render(marker) + p.Style().Render(" ")
+	mw := ansi.StringWidth(marker)
+	if mw > 0 {
+		mw++ // a gap between a cut title and the marker
+	}
+	label = p.Pad(label, lw-mw-1) + p.Style().Render(" ") + p.Fg(markerFg).Render(marker)
+	label = p.Pad(label, lw)
 
 	// Chart cells.
 	barColor := th.Status(t.Status)

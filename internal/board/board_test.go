@@ -292,3 +292,13 @@ func TestUpdate_unrelatedFieldIgnoresStoredStartAfterDue(t *testing.T) {
 	_, err = b.Update(tk.ID, UpdateInput{DueDate: ptr("2026-06-02")})
 	assert.ErrorContains(t, err, "after due", "a date the caller sets is still checked")
 }
+
+func TestCheckAfter(t *testing.T) {
+	b := newTestBoard(t)
+	a, _ := b.Add("a", AddInput{})
+	c, _ := b.Add("c", AddInput{After: []string{a.ID}})
+	assert.NoError(t, b.CheckAfter("", []string{a.ID}))
+	assert.ErrorIs(t, b.CheckAfter("", []string{"T-NOPE"}), ErrNotFound)
+	assert.ErrorContains(t, b.CheckAfter(a.ID, []string{c.ID}), "cycle")
+	assert.ErrorContains(t, b.CheckAfter(a.ID, []string{a.ID}), "itself")
+}

@@ -13,9 +13,7 @@ func Run(filePath string, opts ui.Options) error {
 	if err != nil {
 		return err
 	}
-	m := newModel(b, filePath)
-	m.opts = opts
-	m.look = opts.Resolve(true)
+	m := newModel(b, filePath, opts)
 	p := tea.NewProgram(m)
 	_, err = p.Run()
 	return err

@@ -89,7 +89,7 @@ func TestRender_windowAndClip(t *testing.T) {
 	require.Len(t, out.Lines, HeaderLines+2)
 	assert.Equal(t, 3, out.First)
 	assert.Equal(t, 5, out.Last)
-	assert.Contains(t, plain(out)[2], "Deploy to production")
+	assert.Contains(t, plain(out)[2], "Deploy to product")
 	assert.True(t, out.Clipped, "the day zoom does not fit 33 days in 80 columns")
 
 	out = Render(l, BarRows(l), ctx("mono"), Opts{Width: 80, Zoom: ZoomDay, Offset: 99, Height: 2})

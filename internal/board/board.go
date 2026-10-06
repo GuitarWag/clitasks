@@ -244,6 +244,12 @@ func (b *Board) ByStatus() map[model.TaskStatus][]model.Task {
 	return out
 }
 
+// CheckAfter reports whether task id may wait for the tasks in after: each
+// must exist, not be id itself, and not create a cycle. Use "" for a new task.
+func (b *Board) CheckAfter(id string, after []string) error {
+	return b.validate(model.Task{ID: id, After: after}, false, false, true)
+}
+
 // Dependents returns the IDs of the tasks whose After list holds id.
 func (b *Board) Dependents(id string) []string {
 	var out []string
