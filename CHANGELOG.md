@@ -5,24 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Added
-- Redesigned TUI on Bubble Tea v2: a board of cards with a detail pane, a timeline screen with zoom, grouping, dependency markers and date edits, overlays over a dimmed screen, a form with date shortcuts and an `after` picker, search tokens, a command palette, mouse support, live reload of `tasks.md`, and focus dimming. See TUI_GUIDE.md.
-- Themes (`catppuccin-mocha`, `catppuccin-latte`, `tokyo-night`, `nord`, `mono`) and icon sets (`nerd`, `unicode`, `ascii`), with `--theme`, `--icons`, `TASKS_THEME` and `TASKS_ICONS`. The TUI picks dark or light from the terminal background.
-- On a terminal, `board`, `list`, `show`, `stats` and `timeline` use the TUI's cards and chart. Piped output keeps the plain format.
-- `tasks timeline`: an ASCII Gantt chart. It uses a week scale when the range does not fit.
-- TUI timeline view on the `t` key, with row selection and week scrolling.
-- `tasks export --format gantt`: Mermaid gantt output.
-- `start` and `after` task fields, with `--start` and `--after` on `add` and `update`.
-- Due and Start steps in the TUI add and edit form.
+## [3.0.0] - 2026-10-06
 
 ### Changed
-- Plain `tasks timeline` output uses the new chart: a two-line date header, task IDs in the labels, and day, week or month zoom.
-- Task text read from `tasks.md` drops control characters, so a shared file cannot send escape sequences to the terminal.
+- Rewrite in Go as one static binary (Cobra for the CLI, Bubble Tea for the TUI). Install with `go install` or `make install`; the npm package and Node toolchain are gone. Every CLI command keeps its behavior, except the items below.
+- Redesigned TUI on Bubble Tea v2: a board of cards with a detail pane, overlays over a dimmed screen, search, a command palette, mouse support, live reload of `tasks.md` and focus dimming. `tab` switches to the timeline. See TUI_GUIDE.md.
+- On a terminal, `board`, `list`, `show`, `stats` and `timeline` print with the TUI's cards and chart. Piped output keeps the plain format, with ASCII icons and task IDs.
+- Board writes are atomic (temp file and rename), and a failed save leaves the board unchanged in memory.
 - Go 1.26 or newer is required.
-- `--due` and `--start` accept only `YYYY-MM-DD`. Old boards with other due values still load, and those tasks show as unscheduled in the timeline.
-- A move to in-progress sets the start date to today if it is empty and the task is not overdue.
+
+### Added
+- Timeline (Gantt) view: `tasks timeline` in the CLI and a TUI screen with day, week and month zoom, grouping, dependency and conflict markers, and date edits from the keyboard.
+- `tasks export --format gantt`: Mermaid gantt output.
+- `start` and `after` task fields, with `--start` and `--after` on `add` and `update`. The CLI rejects unknown IDs and cycles in `after`.
+- A task form with date shortcuts (`+3d`, `fri`, `next week`) and a picker for `after` links.
+- Search tokens in the TUI: `@who`, `#tag`, `!priority`, `is:overdue`, `due:<7d` and more.
+- Themes (`catppuccin-mocha`, `catppuccin-latte`, `tokyo-night`, `nord`, `mono`) and icon sets (`nerd`, `unicode`, `ascii`), with `--theme`, `--icons`, `TASKS_THEME` and `TASKS_ICONS`. `NO_COLOR` is respected.
+- `tasks claude` and `tasks codex` install the bundled SKILL.md for AI agents.
+- Design decision records in `docs/adr/`.
+
+### Breaking
+- `--due` and `--start` accept only `YYYY-MM-DD`. Old boards with other due values still load; those tasks show as unscheduled in the timeline.
+- `export --format` has no short flag: `-f` is the board file.
+- In the TUI, `h` moves left and `?` opens help.
+- Plain `tasks timeline` output uses the chart layout: a two-line date header and task IDs in the labels.
+
+### Fixed
+- Task text read from `tasks.md` drops control characters, so a shared file cannot send escape sequences to the terminal.
+- Saving in the TUI no longer overwrites changes that another program made to `tasks.md` while the TUI was open.
+- A move to in-progress sets the start date to today only if it is empty and the task is not overdue.
 - `delete` removes the deleted ID from the `after` list of other tasks.
 
 ## [2.1.0] - 2026-02-01
