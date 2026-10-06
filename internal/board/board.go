@@ -50,6 +50,9 @@ type AddInput struct {
 	DueDate     string
 	Start       string
 	After       []string
+	// Status is the initial status; empty means todo. In-progress sets the
+	// start date the same way a move does.
+	Status model.TaskStatus
 }
 
 type UpdateInput struct {
@@ -94,15 +97,38 @@ func (b *Board) Add(title string, in AddInput) (model.Task, error) {
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
+	if in.Status != "" {
+		if !in.Status.Valid() {
+			return model.Task{}, fmt.Errorf("invalid status %q", in.Status)
+		}
+		t.Status = in.Status
+		if t.Status == model.StatusInProgress && t.Start == "" {
+			t.Start = autoStart(t, now)
+		}
+	}
 	if err := b.validate(t, in.DueDate != "", in.Start != "", len(in.After) > 0); err != nil {
 		return model.Task{}, err
 	}
+	prevUpdated := b.data.UpdatedAt
 	b.data.Tasks = append(b.data.Tasks, t)
 	b.data.UpdatedAt = now
 	if err := b.save(); err != nil {
+		// Keep memory equal to the file, so a retry does not add twice.
+		b.data.Tasks = b.data.Tasks[:len(b.data.Tasks)-1]
+		b.data.UpdatedAt = prevUpdated
 		return model.Task{}, err
 	}
 	return t, nil
+}
+
+// autoStart is the start date that a move to in-progress sets: today, unless
+// the task is overdue (today would then be after its due date).
+func autoStart(t model.Task, now time.Time) string {
+	today := now.In(time.Local).Format(time.DateOnly)
+	if due, err := model.ParseDate(t.DueDate); err == nil && due.Before(mustDate(today)) {
+		return ""
+	}
+	return today
 }
 
 func (b *Board) Update(id string, in UpdateInput) (model.Task, error) {
@@ -139,11 +165,7 @@ func (b *Board) Update(id string, in UpdateInput) (model.Task, error) {
 	}
 	if in.Status != nil {
 		if *in.Status == model.StatusInProgress && t.Start == "" {
-			today := now.In(time.Local).Format(time.DateOnly)
-			// An overdue task keeps an empty start: today would be after due.
-			if due, err := model.ParseDate(t.DueDate); err != nil || !due.Before(mustDate(today)) {
-				t.Start = today
-			}
+			t.Start = autoStart(*t, now)
 		}
 		t.Status = *in.Status
 	}
@@ -152,9 +174,11 @@ func (b *Board) Update(id string, in UpdateInput) (model.Task, error) {
 		return model.Task{}, err
 	}
 	t.UpdatedAt = now
+	prev, prevUpdated := b.data.Tasks[idx], b.data.UpdatedAt
 	b.data.Tasks[idx] = nt
 	b.data.UpdatedAt = now
 	if err := b.save(); err != nil {
+		b.data.Tasks[idx], b.data.UpdatedAt = prev, prevUpdated
 		return model.Task{}, err
 	}
 	return *t, nil
@@ -170,6 +194,7 @@ func (b *Board) Delete(id string) (model.Task, error) {
 		return model.Task{}, ErrNotFound
 	}
 	removed := b.data.Tasks[idx]
+	prevTasks, prevUpdated := slices.Clone(b.data.Tasks), b.data.UpdatedAt
 	b.data.Tasks = append(b.data.Tasks[:idx], b.data.Tasks[idx+1:]...)
 	for i := range b.data.Tasks {
 		b.data.Tasks[i].After = slices.DeleteFunc(slices.Clone(b.data.Tasks[i].After),
@@ -180,6 +205,7 @@ func (b *Board) Delete(id string) (model.Task, error) {
 	}
 	b.data.UpdatedAt = b.clock().UTC()
 	if err := b.save(); err != nil {
+		b.data.Tasks, b.data.UpdatedAt = prevTasks, prevUpdated
 		return model.Task{}, err
 	}
 	return removed, nil

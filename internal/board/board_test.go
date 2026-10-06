@@ -2,6 +2,7 @@ package board
 
 import (
 	"math/rand/v2"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -314,4 +315,37 @@ func TestAddUpdate_cleanText(t *testing.T) {
 	got, err := b.Update(tk.ID, UpdateInput{Title: ptr("c\x1bd")})
 	require.NoError(t, err)
 	assert.Equal(t, "cd", got.Title)
+}
+
+func TestAdd_withStatusIsOneWrite(t *testing.T) {
+	b := newTestBoard(t)
+	tk, err := b.Add("x", AddInput{Status: model.StatusInProgress})
+	require.NoError(t, err)
+	assert.Equal(t, model.StatusInProgress, tk.Status)
+	assert.Equal(t, b.clock().In(time.Local).Format(time.DateOnly), tk.Start)
+	_, err = b.Add("y", AddInput{Status: "bogus"})
+	assert.Error(t, err)
+}
+
+// A failed save must leave memory equal to the file, so a retry is safe.
+func TestWrites_rollBackOnSaveError(t *testing.T) {
+	b := newTestBoard(t)
+	keep, _ := b.Add("keep", AddInput{})
+	dir := filepath.Dir(b.Path())
+	require.NoError(t, os.Chmod(dir, 0o500))
+	t.Cleanup(func() { _ = os.Chmod(dir, 0o700) })
+
+	_, err := b.Add("lost", AddInput{})
+	require.Error(t, err)
+	assert.Len(t, b.List(Filter{}), 1, "the failed add is not kept in memory")
+
+	_, err = b.Update(keep.ID, UpdateInput{Title: ptr("renamed")})
+	require.Error(t, err)
+	got, _ := b.Get(keep.ID)
+	assert.Equal(t, "keep", got.Title)
+
+	_, err = b.Delete(keep.ID)
+	require.Error(t, err)
+	_, ok := b.Get(keep.ID)
+	assert.True(t, ok)
 }

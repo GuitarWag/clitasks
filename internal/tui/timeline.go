@@ -155,8 +155,12 @@ func (m Model) renderTimeline(w, h int, conflicts map[string]bool) string {
 	th, ic := m.look.Theme, m.look.Icons
 	p := card.Painter{BG: th.Base}
 	rows, l := m.tlRows()
-	if len(l.Bars) == 0 && len(l.Unscheduled) == 0 {
+	if len(m.board.Info().Tasks) == 0 {
 		return m.emptyBoard(w, h)
+	}
+	if len(l.Bars) == 0 && len(l.Unscheduled) == 0 {
+		msg := p.Fg(th.Muted).Render("  No task matches the search · esc clears it")
+		return fit("\n"+msg, w, h, th.Base)
 	}
 	g := m.tlGeometry(h, l)
 	zoom := m.tlZoom(l, w)
@@ -331,6 +335,12 @@ func (m *Model) editDates(k tea.KeyPressMsg, l timeline.Layout) tea.Cmd {
 	}
 	t := bar.Task
 	day := func(d time.Time) string { return d.Format(time.DateOnly) }
+	// Shift the stored due date. bar.End can differ from it: the layout
+	// clamps a due date before the start up to the start.
+	due := bar.End
+	if d, err := model.ParseDate(t.DueDate); err == nil {
+		due = d
+	}
 	today := day(timeline.Day(m.now()))
 	in := board.UpdateInput{}
 	var msg string
@@ -343,7 +353,7 @@ func (m *Model) editDates(k tea.KeyPressMsg, l timeline.Layout) tea.Cmd {
 		s := day(bar.Start.AddDate(0, 0, d))
 		in.Start = &s
 		if t.DueDate != "" {
-			e := day(bar.End.AddDate(0, 0, d))
+			e := day(due.AddDate(0, 0, d))
 			in.DueDate = &e
 		}
 		msg = fmt.Sprintf("Moved %s to start %s", t.ID, s)
@@ -352,7 +362,7 @@ func (m *Model) editDates(k tea.KeyPressMsg, l timeline.Layout) tea.Cmd {
 		if key.Matches(k, tk.DueEarlier) {
 			d = -1
 		}
-		e := day(bar.End.AddDate(0, 0, d))
+		e := day(due.AddDate(0, 0, d))
 		in.DueDate = &e
 		msg = "Due " + e
 	case key.Matches(k, tk.StartToday):

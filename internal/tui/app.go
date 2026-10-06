@@ -393,6 +393,9 @@ func indexOfID(tasks []model.Task, id string) int {
 // write runs one board change, then shows its result as a toast. Every
 // write in the TUI goes through here, so no error is dropped.
 func (m *Model) write(okText string, fn func() error) tea.Cmd {
+	if err := m.syncFromDisk(); err != nil {
+		return m.showToast("Reload failed: "+err.Error(), toastErr)
+	}
 	if err := fn(); err != nil {
 		return m.showToast(errText(err), toastErr)
 	}
@@ -437,6 +440,23 @@ func (m *Model) checkReload() tea.Cmd {
 		return m.showToast("tasks.md changed on disk · reloads when you close the form", toastWarn)
 	}
 	return m.reload("Reloaded · tasks.md changed on disk")
+}
+
+// syncFromDisk reloads the board when tasks.md changed since the last read
+// or write. Every write calls it first: a save writes the whole board, so a
+// stale board would overwrite what another program added.
+func (m *Model) syncFromDisk() error {
+	if m.fileMtime().Equal(m.mtime) {
+		return nil
+	}
+	b, err := board.Open(storage.NewMarkdown(m.path))
+	if err != nil {
+		return err
+	}
+	m.board = b
+	m.mtime = m.fileMtime()
+	m.reloadDue = false
+	return nil
 }
 
 // reload reads the board file again. Selections are task IDs, so they

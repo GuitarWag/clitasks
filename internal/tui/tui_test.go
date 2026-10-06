@@ -558,3 +558,114 @@ func sameMotion(a, b string) bool {
 	pairs := map[string]string{"up": "up", "down": "down", "column": "earlier"}
 	return pairs[a] == b || a == b || (a == "column" && b == "later")
 }
+
+// --- review fixes ---
+
+// An agent adds a task while the user edits: saving must not drop it.
+func TestForm_saveKeepsChangesMadeOnDisk(t *testing.T) {
+	m := demoBoard(t, "mono", 140, 42)
+	m = send(m, "e")
+	other := reopen(t, m)
+	agent, err := other.Add("Added by an agent", board.AddInput{})
+	require.NoError(t, err)
+	future := time.Now().Add(time.Minute)
+	require.NoError(t, os.Chtimes(m.path, future, future))
+	m, _ = update(m, reloadTickMsg(time.Now())) // the reload waits for the form
+
+	m.ov.(*formOverlay).v.title = "Renamed in the TUI"
+	m = send(m, "ctrl+s")
+	require.Nil(t, m.ov)
+
+	disk := reopen(t, m)
+	_, ok := disk.Get(agent.ID)
+	assert.True(t, ok, "the agent's task survives the save")
+	got, _ := disk.Get(idDocs)
+	assert.Equal(t, "Renamed in the TUI", got.Title)
+}
+
+func TestBoard_moveKeepsChangesMadeOnDisk(t *testing.T) {
+	m := demoBoard(t, "mono", 140, 42)
+	other := reopen(t, m)
+	agent, err := other.Add("Added by an agent", board.AddInput{})
+	require.NoError(t, err)
+	future := time.Now().Add(time.Minute)
+	require.NoError(t, os.Chtimes(m.path, future, future))
+	m = send(m, "L") // before the reload tick
+	_, ok := reopen(t, m).Get(agent.ID)
+	assert.True(t, ok)
+}
+
+// Editing only the title of an in-progress task without a start date must
+// not give it a start date.
+func TestForm_unchangedStatusSetsNoStart(t *testing.T) {
+	m := demoBoard(t, "mono", 140, 42)
+	tk, err := m.board.Add("Doing, no start", board.AddInput{})
+	require.NoError(t, err)
+	require.NoError(t, storage.NewMarkdown(m.path).Write(func() *model.Board {
+		b := m.board.Info()
+		for i := range b.Tasks {
+			if b.Tasks[i].ID == tk.ID {
+				b.Tasks[i].Status = model.StatusInProgress
+			}
+		}
+		return &b
+	}()))
+	m, _ = update(m, reloadTickMsg(time.Now()))
+	got, _ := m.board.Get(tk.ID)
+	require.Equal(t, model.StatusInProgress, got.Status)
+	require.Empty(t, got.Start)
+
+	m.selectTask(got)
+	m = send(m, "e")
+	m.ov.(*formOverlay).v.title = "Doing, renamed"
+	m = send(m, "ctrl+s")
+	got, _ = m.board.Get(tk.ID)
+	assert.Equal(t, "Doing, renamed", got.Title)
+	assert.Empty(t, got.Start)
+}
+
+// A due date before the start is clamped in the layout; shifts must use
+// the stored date, not the clamped bar end.
+func TestTimeline_dueShiftUsesStoredDate(t *testing.T) {
+	m := send(demoBoard(t, "mono", 160, 44), "tab")
+	tk, err := m.board.Add("Due before created", board.AddInput{})
+	require.NoError(t, err)
+	b := m.board.Info()
+	for i := range b.Tasks {
+		if b.Tasks[i].ID == tk.ID {
+			b.Tasks[i].DueDate = "2026-10-01" // created Oct 8, due Oct 1
+		}
+	}
+	require.NoError(t, storage.NewMarkdown(m.path).Write(&b))
+	future := time.Now().Add(time.Minute)
+	require.NoError(t, os.Chtimes(m.path, future, future))
+	m, _ = update(m, reloadTickMsg(time.Now()))
+
+	m.tl.sel = tk.ID
+	m = send(m, "alt+>")
+	got, _ := m.board.Get(tk.ID)
+	assert.Equal(t, "2026-10-02", got.DueDate, "one day after the stored due date")
+}
+
+func TestTimeline_noMatchIsNotAnEmptyBoard(t *testing.T) {
+	m := send(demoBoard(t, "mono", 160, 44), "tab", "/")
+	for _, r := range "zzzz" {
+		m = send(m, string(r))
+	}
+	out := plainView(m)
+	assert.Contains(t, out, "No task matches the search")
+	assert.NotContains(t, out, "No tasks yet")
+}
+
+func TestForm_addInProgressIsOneTask(t *testing.T) {
+	m := demoBoard(t, "mono", 140, 42)
+	n := len(m.board.Info().Tasks)
+	m = send(m, "a")
+	f := m.ov.(*formOverlay)
+	f.v.title, f.v.status = "Started at once", model.StatusInProgress
+	m = send(m, "ctrl+s")
+	assert.Len(t, m.board.Info().Tasks, n+1)
+	s, _ := m.selected()
+	assert.Equal(t, model.StatusInProgress, s.Status)
+	assert.Equal(t, "2026-10-08", s.Start)
+}

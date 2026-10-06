@@ -200,26 +200,32 @@ func (f *formOverlay) submit(m *Model) (bool, tea.Cmd) {
 	}
 	desc, assignee := strings.TrimSpace(v.desc), strings.TrimSpace(v.assignee)
 	after := slices.Clone(v.after)
+	// The file may have changed while the form was open; write over the
+	// current board, not the one the form started from.
+	if err := m.syncFromDisk(); err != nil {
+		f.err = "Reload failed: " + err.Error()
+		f.reopen()
+		return false, nil
+	}
 
 	var saved model.Task
 	write := func() error {
 		if f.editing == nil {
 			t, err := m.board.Add(title, board.AddInput{
 				Description: desc, Priority: v.priority, Assignee: assignee, Tags: tags,
-				DueDate: v.due, Start: start, After: after,
+				DueDate: v.due, Start: start, After: after, Status: v.status,
 			})
-			if err != nil {
-				return err
-			}
 			saved = t
-			if v.status != model.StatusTodo {
-				saved, err = m.board.Move(t.ID, v.status)
-			}
 			return err
 		}
 		in := board.UpdateInput{
 			Title: &title, Description: &desc, Priority: &v.priority, Assignee: &assignee,
-			Tags: &tags, Status: &v.status,
+			Tags: &tags,
+		}
+		// A status that did not change is not sent: a "move" to in-progress
+		// would set a start date the user did not ask for.
+		if v.status != f.editing.Status {
+			in.Status = &v.status
 		}
 		// Send dates and links only when they changed, so an old free-form
 		// due date that the user did not touch still saves.
